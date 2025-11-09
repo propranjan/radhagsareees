@@ -1,0 +1,64 @@
+# CODEOWNERS
+# This file defines code ownership for automatic reviewer assignment
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global fallback owners
+* @radhagsareees/core-team
+
+# Root configuration files
+/.github/ @radhagsareees/devops-team
+/docker-compose*.yml @radhagsareees/devops-team
+/Dockerfile @radhagsareees/devops-team
+/turbo.json @radhagsareees/core-team
+/pnpm-*.yaml @radhagsareees/core-team
+/package.json @radhagsareees/core-team
+
+# Documentation
+/docs/ @radhagsareees/core-team @radhagsareees/tech-writers
+/*.md @radhagsareees/core-team @radhagsareees/tech-writers
+
+# Security and deployment
+/scripts/setup-security.sh @radhagsareees/security-team @radhagsareees/devops-team
+/SECURITY_*.md @radhagsareees/security-team
+/DEPLOYMENT.md @radhagsareees/devops-team
+
+# Database and backend
+/packages/db/ @radhagsareees/backend-team @radhagsareees/dba-team
+/packages/analytics/ @radhagsareees/backend-team @radhagsareees/data-team
+
+# Frontend applications
+/apps/web/ @radhagsareees/frontend-team
+/apps/admin/ @radhagsareees/frontend-team @radhagsareees/admin-team
+
+# UI components and design system
+/packages/ui/ @radhagsareees/frontend-team @radhagsareees/design-team
+/packages/config/tailwind.js @radhagsareees/design-team
+
+# Testing
+/e2e/ @radhagsareees/qa-team @radhagsareees/frontend-team
+/jest.*.js @radhagsareees/qa-team
+/playwright.config.ts @radhagsareees/qa-team
+/**/test*/ @radhagsareees/qa-team
+/**/*.test.* @radhagsareees/qa-team
+/**/*.spec.* @radhagsareees/qa-team
+
+# API routes and middleware
+/apps/*/src/app/api/ @radhagsareees/backend-team @radhagsareees/api-team
+/apps/*/middleware.ts @radhagsareees/backend-team @radhagsareees/security-team
+
+# Internationalization
+/apps/web/messages/ @radhagsareees/i18n-team @radhagsareees/frontend-team
+/apps/*/src/i18n/ @radhagsareees/i18n-team @radhagsareees/frontend-team
+
+# Performance and monitoring
+/lighthouse-ci.json @radhagsareees/performance-team
+/scripts/performance-budget-check.js @radhagsareees/performance-team
+/scripts/analyze-bundle.js @radhagsareees/performance-team
+
+# Accessibility
+/ACCESSIBILITY_*.md @radhagsareees/accessibility-team @radhagsareees/frontend-team
+/packages/ui/src/components/TryOnCanvas.tsx @radhagsareees/accessibility-team @radhagsareees/frontend-team
+
+# Critical components requiring extra review
+/packages/ui/src/components/TryOnCanvas.tsx @radhagsareees/core-team @radhagsareees/security-team
+/packages/db/prisma/schema.prisma @radhagsareees/core-team @radhagsareees/dba-team
