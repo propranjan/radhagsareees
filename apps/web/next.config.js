@@ -1,8 +1,10 @@
-// Load and validate environment variables at build time
-require('dotenv-safe').config({
-  example: '.env.example',
-  allowEmptyValues: false,
-});
+// Load and validate environment variables in development only
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv-safe').config({
+    example: '.env.example',
+    allowEmptyValues: false,
+  });
+}
 
 const createNextIntlPlugin = require('next-intl/plugin');
 
