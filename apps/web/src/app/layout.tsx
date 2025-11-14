@@ -1,5 +1,7 @@
-// Load and validate environment variables first
-import '../lib/env';
+// Load and validate environment variables first (only in local dev)
+if (!process.env.VERCEL && !process.env.CI) {
+  require('../lib/env');
+}
 
 import './globals.css';
 import { Inter, Playfair_Display } from 'next/font/google';
