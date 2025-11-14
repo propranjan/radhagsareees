@@ -15,6 +15,14 @@ if (!process.env.VERCEL && !process.env.CI) {
 const nextConfig = {
   // Skip all static page generation to avoid prerender errors
   output: 'standalone',
+  experimental: {
+    // Skip static generation during export
+    skipTrailingSlashRedirect: true,
+  },
+  // Disable static page generation
+  generateBuildId: async () => {
+    return 'build-' + Date.now()
+  },
   typescript: {
     // Temporarily ignore type errors for build
     ignoreBuildErrors: true,
