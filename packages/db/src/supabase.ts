@@ -62,10 +62,10 @@ export const signOut = async () => {
 };
 
 // Database helpers with proper typing
-export const from = (table: keyof Database['public']['Tables']) => {
-  return supabase.from(table);
+export const from = (table: keyof Database['public']['Tables']): any => {
+  return supabase.from(table as any);
 };
 
-export const adminFrom = (table: keyof Database['public']['Tables']) => {
-  return supabaseAdmin.from(table);
+export const adminFrom = (table: keyof Database['public']['Tables']): any => {
+  return supabaseAdmin.from(table as any);
 };

@@ -381,7 +381,7 @@ async function main() {
       });
       
       if (productReviews.length > 0) {
-        const avgRating = productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length;
+        const avgRating = productReviews.reduce((sum: number, r) => sum + r.rating, 0) / productReviews.length;
         await prisma.product.update({
           where: { id: product.id },
           data: {
