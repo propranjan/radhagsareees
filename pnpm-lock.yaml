@@ -23,6 +23,12 @@ importers:
       lucide-react:
         specifier: ^0.553.0
         version: 0.553.0(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
       sharp:
         specifier: ^0.33.0
         version: 0.33.5
