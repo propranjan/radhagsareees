@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus, Minus, Save, ArrowLeft } from 'lucide-react';
-import { ProductCreationData, productCreationSchema } from '../../lib/validations';
+import { ProductCreationData, productCreationSchema } from '../lib/validations';
 
 interface Category {
   id: string;
@@ -61,14 +61,15 @@ export default function ProductForm({ productId, initialData }: ProductFormProps
     },
   });
 
-  const { fields: variantFields, append: addVariant, remove: removeVariant } = useFieldArray({
+  const { fields: variantFields, append: addVariant, remove: removeVariant } = useFieldArray<ProductCreationData, 'variants'>({
     control,
     name: 'variants',
   });
 
   const { fields: imageFields, append: addImage, remove: removeImage } = useFieldArray({
     control,
-    name: 'product.images',
+    // Cast to any to support nested array path in RHF types
+    name: 'product.images' as any,
   });
 
   const title = watch('product.title');

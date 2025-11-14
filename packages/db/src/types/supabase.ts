@@ -6,219 +6,121 @@
 export interface Database {
   public: {
     Tables: {
-      User: {
+      users: {
         Row: {
           id: string;
           email: string;
           name: string;
-          role: 'USER' | 'ADMIN' | 'MODERATOR';
-          createdAt: string;
-          updatedAt: string;
-        };
-        Insert: {
-          id?: string;
-          email: string;
-          name: string;
-          role?: 'USER' | 'ADMIN' | 'MODERATOR';
-          createdAt?: string;
-          updatedAt?: string;
-        };
-        Update: {
-          id?: string;
-          email?: string;
-          name?: string;
-          role?: 'USER' | 'ADMIN' | 'MODERATOR';
-          createdAt?: string;
-          updatedAt?: string;
-        };
-      };
-      Product: {
-        Row: {
-          id: string;
-          name: string;
-          description: string;
-          price: number;
-          category: string;
-          subcategory: string | null;
-          fabric: string | null;
-          color: string;
-          pattern: string | null;
-          occasion: string | null;
-          brand: string | null;
-          sku: string;
-          slug: string;
-          images: string[];
-          overlayPng: string | null;
+          avatar: string | null;
+          phone: string | null;
+          role: 'CUSTOMER' | 'ADMIN' | 'STAFF' | 'MANAGER';
           isActive: boolean;
           createdAt: string;
           updatedAt: string;
         };
-        Insert: {
-          id?: string;
+        Insert: Partial<Database['public']['Tables']['users']['Row']> & {
+          email: string;
           name: string;
-          description: string;
-          price: number;
-          category: string;
-          subcategory?: string | null;
-          fabric?: string | null;
-          color: string;
-          pattern?: string | null;
-          occasion?: string | null;
-          brand?: string | null;
-          sku: string;
-          slug: string;
-          images: string[];
-          overlayPng?: string | null;
-          isActive?: boolean;
-          createdAt?: string;
-          updatedAt?: string;
         };
-        Update: {
-          id?: string;
-          name?: string;
-          description?: string;
-          price?: number;
-          category?: string;
-          subcategory?: string | null;
-          fabric?: string | null;
-          color?: string;
-          pattern?: string | null;
-          occasion?: string | null;
-          brand?: string | null;
-          sku?: string;
-          slug?: string;
-          images?: string[];
-          overlayPng?: string | null;
-          isActive?: boolean;
-          createdAt?: string;
-          updatedAt?: string;
-        };
+        Update: Partial<Database['public']['Tables']['users']['Row']>;
       };
-      Review: {
+      products: {
         Row: {
           id: string;
-          userId: string;
-          productId: string;
-          rating: number;
-          title: string | null;
-          content: string;
+          slug: string;
+          title: string;
+          description: string;
           images: string[];
+          care: string | null;
+          ratingAvg: number | null;
+          ratingCount: number;
+          categoryId: string;
+          isActive: boolean;
+          isNew: boolean;
+          isFeatured: boolean;
+          metaTitle: string | null;
+          metaDescription: string | null;
+          createdAt: string;
+          updatedAt: string;
+        };
+        Insert: Partial<Database['public']['Tables']['products']['Row']> & {
+          slug: string;
+          title: string;
+          description: string;
+          images: string[];
+          categoryId: string;
+        };
+        Update: Partial<Database['public']['Tables']['products']['Row']>;
+      };
+      reviews: {
+        Row: {
+          id: string;
+          productId: string;
+          userId: string;
+          rating: number;
+          title: string;
+          comment: string;
+          imageUrls: string[];
+          status: 'PENDING' | 'APPROVED' | 'REJECTED';
           isVerified: boolean;
           helpfulCount: number;
-          moderationStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
-          moderatedBy: string | null;
+          reportCount: number;
+          riskScore: number | null;
+          moderationFlags: string[] | null;
           moderatedAt: string | null;
+          moderatorId: string | null;
+          processingTimeHours: number | null;
           createdAt: string;
           updatedAt: string;
         };
-        Insert: {
-          id?: string;
-          userId: string;
+        Insert: Partial<Database['public']['Tables']['reviews']['Row']> & {
           productId: string;
+          userId: string;
           rating: number;
-          title?: string | null;
-          content: string;
-          images?: string[];
-          isVerified?: boolean;
-          helpfulCount?: number;
-          moderationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
-          moderatedBy?: string | null;
-          moderatedAt?: string | null;
-          createdAt?: string;
-          updatedAt?: string;
+          title: string;
+          comment: string;
         };
-        Update: {
-          id?: string;
-          userId?: string;
-          productId?: string;
-          rating?: number;
-          title?: string | null;
-          content?: string;
-          images?: string[];
-          isVerified?: boolean;
-          helpfulCount?: number;
-          moderationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
-          moderatedBy?: string | null;
-          moderatedAt?: string | null;
-          createdAt?: string;
-          updatedAt?: string;
-        };
+        Update: Partial<Database['public']['Tables']['reviews']['Row']>;
       };
-      Order: {
+      orders: {
         Row: {
           id: string;
           userId: string;
-          status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
-          total: number;
-          currency: string;
-          paymentIntentId: string | null;
-          shippingAddress: any;
-          billingAddress: any;
-          trackingNumber: string | null;
+          orderNumber: string;
+          items: any;
+          amount: number;
+          status: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
+          paymentRef: string | null;
+          tax: number;
+          shipping: number;
+          discount: number;
+          shippingAddressId: string | null;
+          notes: string | null;
           createdAt: string;
           updatedAt: string;
         };
-        Insert: {
-          id?: string;
+        Insert: Partial<Database['public']['Tables']['orders']['Row']> & {
           userId: string;
-          status?: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
-          total: number;
-          currency?: string;
-          paymentIntentId?: string | null;
-          shippingAddress: any;
-          billingAddress: any;
-          trackingNumber?: string | null;
-          createdAt?: string;
-          updatedAt?: string;
+          orderNumber: string;
+          items: any;
+          amount: number;
         };
-        Update: {
-          id?: string;
-          userId?: string;
-          status?: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
-          total?: number;
-          currency?: string;
-          paymentIntentId?: string | null;
-          shippingAddress?: any;
-          billingAddress?: any;
-          trackingNumber?: string | null;
-          createdAt?: string;
-          updatedAt?: string;
-        };
+        Update: Partial<Database['public']['Tables']['orders']['Row']>;
       };
-      Inventory: {
+      inventory: {
         Row: {
           id: string;
-          productId: string;
-          size: string;
+          variantId: string;
           qtyAvailable: number;
-          qtyReserved: number;
-          restockDate: string | null;
           lowStockThreshold: number;
+          reservedQty: number;
           createdAt: string;
           updatedAt: string;
         };
-        Insert: {
-          id?: string;
-          productId: string;
-          size: string;
-          qtyAvailable: number;
-          qtyReserved?: number;
-          restockDate?: string | null;
-          lowStockThreshold?: number;
-          createdAt?: string;
-          updatedAt?: string;
+        Insert: Partial<Database['public']['Tables']['inventory']['Row']> & {
+          variantId: string;
         };
-        Update: {
-          id?: string;
-          productId?: string;
-          size?: string;
-          qtyAvailable?: number;
-          qtyReserved?: number;
-          restockDate?: string | null;
-          lowStockThreshold?: number;
-          createdAt?: string;
-          updatedAt?: string;
-        };
+        Update: Partial<Database['public']['Tables']['inventory']['Row']>;
       };
     };
     Views: {
@@ -228,9 +130,10 @@ export interface Database {
       [_ in never]: never;
     };
     Enums: {
-      UserRole: 'USER' | 'ADMIN' | 'MODERATOR';
-      OrderStatus: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
-      ModerationStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+      UserRole: 'CUSTOMER' | 'ADMIN' | 'STAFF' | 'MANAGER';
+      OrderStatus: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
+      ReviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+      PaymentStatus: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'REFUNDED';
     };
   };
 }

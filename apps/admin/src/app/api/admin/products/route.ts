@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@radhagsareees/db';
-import { productCreationSchema } from '../../../lib/validations';
+import { productCreationSchema } from '../../../../lib/validations';
 
 const prisma = new PrismaClient();
 
@@ -146,8 +146,8 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Failed to create product:', error);
-    
-    if (error.code === 'P2002') {
+    const anyError = error as any;
+    if (anyError && anyError.code === 'P2002') {
       return NextResponse.json(
         { error: 'Product with this slug already exists' },
         { status: 409 }
