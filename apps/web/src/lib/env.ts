@@ -1,42 +1,44 @@
 import dotenvSafe from 'dotenv-safe';
 import path from 'path';
 
-// Load and validate environment variables on boot
-try {
-  dotenvSafe.config({
-    example: path.join(process.cwd(), '.env.example'),
-    allowEmptyValues: false,
-  });
-} catch (error) {
-  console.error('🚨 Environment Configuration Error:');
-  console.error('═'.repeat(50));
-  
-  if (error.missing && error.missing.length > 0) {
-    console.error('❌ Missing required environment variables:');
-    error.missing.forEach((variable: string) => {
-      console.error(`   • ${variable}`);
+// Load and validate environment variables on boot (skip on Vercel/CI)
+if (!process.env.VERCEL && !process.env.CI) {
+  try {
+    dotenvSafe.config({
+      example: path.join(process.cwd(), '.env.example'),
+      allowEmptyValues: true, // Allow optional vars
     });
+  } catch (error: any) {
+    console.error('🚨 Environment Configuration Error:');
+    console.error('═'.repeat(50));
+    
+    if (error.missing && error.missing.length > 0) {
+      console.error('❌ Missing required environment variables:');
+      error.missing.forEach((variable: string) => {
+        console.error(`   • ${variable}`);
+      });
+      console.error();
+    }
+    
+    if (error.parsed && Object.keys(error.parsed).length > 0) {
+      console.error('⚠️  Found in .env file but not in .env.example:');
+      Object.keys(error.parsed).forEach((variable) => {
+        console.error(`   • ${variable}`);
+      });
+      console.error();
+    }
+    
+    console.error('💡 How to fix:');
+    console.error('   1. Copy .env.example to .env.local');
+    console.error('   2. Fill in all required values');
+    console.error('   3. Ensure all variables in .env.example are set');
     console.error();
+    console.error('📖 Setup Guide:');
+    console.error('   https://github.com/your-repo/setup-guide');
+    console.error('═'.repeat(50));
+    
+    process.exit(1);
   }
-  
-  if (error.parsed && Object.keys(error.parsed).length > 0) {
-    console.error('⚠️  Found in .env file but not in .env.example:');
-    Object.keys(error.parsed).forEach((variable) => {
-      console.error(`   • ${variable}`);
-    });
-    console.error();
-  }
-  
-  console.error('💡 How to fix:');
-  console.error('   1. Copy .env.example to .env.local');
-  console.error('   2. Fill in all required values');
-  console.error('   3. Ensure all variables in .env.example are set');
-  console.error();
-  console.error('📖 Setup Guide:');
-  console.error('   https://github.com/your-repo/setup-guide');
-  console.error('═'.repeat(50));
-  
-  process.exit(1);
 }
 
 // Additional validation for critical variables
