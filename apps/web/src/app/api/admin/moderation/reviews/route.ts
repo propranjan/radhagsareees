@@ -3,6 +3,10 @@ import { prisma } from '@radhagsareees/db';
 import { verifyJWT } from '@/lib/auth-utils';
 import { analyzeContentSafety } from '@/lib/nsfw-heuristic-analyzer';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 /**
  * GET /api/admin/moderation/reviews
  * Fetch reviews for moderation with filtering and statistics
@@ -11,7 +15,7 @@ export async function GET(request: NextRequest) {
   try {
     // Verify admin authentication
     const authResult = await verifyJWT(request);
-    if (!authResult.success || authResult.payload?.role !== 'admin') {
+    if (!authResult || !authResult.success || authResult.payload?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized - Admin access required' },
         { status: 401 }

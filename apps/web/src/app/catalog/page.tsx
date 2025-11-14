@@ -4,6 +4,9 @@ import { ProductCard } from '@radhagsareees/ui';
 import Link from 'next/link';
 import { Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default function CatalogPage() {
   // Mock products data - in real app, this would come from API/database
   const products = [

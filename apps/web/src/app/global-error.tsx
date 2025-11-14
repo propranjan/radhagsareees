@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function GlobalError({
   error,
@@ -18,47 +17,91 @@ export default function GlobalError({
   return (
     <html lang="en">
       <body>
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center px-4">
-          <div className="max-w-md w-full text-center">
-            <div className="mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-                <AlertCircle className="w-8 h-8 text-red-600" />
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(to bottom, #f9fafb, white)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem'
+        }}>
+          <div style={{
+            maxWidth: '28rem',
+            width: '100%',
+            textAlign: 'center'
+          }}>
+            <div style={{ marginBottom: '2rem' }}>
+              <h1 style={{
+                fontSize: '2rem',
+                fontWeight: 'bold',
+                color: '#111827',
+                marginBottom: '0.5rem'
+              }}>
                 Application Error
               </h1>
-              <p className="text-gray-600 mb-2">
+              <p style={{
+                color: '#6b7280',
+                marginBottom: '0.5rem'
+              }}>
                 We encountered a critical error. Please try reloading the page.
               </p>
               {error.digest && (
-                <p className="text-sm text-gray-500 font-mono">
+                <p style={{
+                  fontSize: '0.875rem',
+                  color: '#9ca3af',
+                  fontFamily: 'monospace'
+                }}>
                   Error ID: {error.digest}
                 </p>
               )}
             </div>
 
-            <div className="space-y-3">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <button
                 onClick={reset}
-                className="inline-flex items-center justify-center gap-2 w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                style={{
+                  width: '100%',
+                  backgroundColor: '#9333ea',
+                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  fontWeight: '500',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
               >
-                <RefreshCw className="w-5 h-5" />
                 Reload Application
               </button>
 
               <a
                 href="/"
-                className="inline-flex items-center justify-center gap-2 w-full border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  border: '1px solid #d1d5db',
+                  color: '#374151',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  fontWeight: '500',
+                  textDecoration: 'none'
+                }}
               >
                 Go to Homepage
               </a>
             </div>
 
-            <div className="mt-8 text-sm text-gray-500">
+            <div style={{
+              marginTop: '2rem',
+              fontSize: '0.875rem',
+              color: '#6b7280'
+            }}>
               If this problem persists, please{' '}
               <a
                 href="mailto:support@radhagsarees.com"
-                className="text-purple-600 hover:text-purple-700 underline"
+                style={{
+                  color: '#9333ea',
+                  textDecoration: 'underline'
+                }}
               >
                 contact support
               </a>

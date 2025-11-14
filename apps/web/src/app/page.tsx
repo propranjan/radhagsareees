@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { ShoppingBag, Heart, User, Search, Menu, Phone, Mail, MapPin } from 'lucide-react';
 
+// Force dynamic rendering to avoid prerender errors
+export const dynamic = 'force-dynamic';
+
 export default function HomePage() {
   return (
     <div className="min-h-screen">

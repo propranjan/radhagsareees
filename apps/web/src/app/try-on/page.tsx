@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { TryOnCanvas, useTryOnSynthesis } from '@radhagsareees/ui';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default function TryOnDemoPage() {
   const [modelInfo, setModelInfo] = useState<any>(null);
   const [poseState, setPoseState] = useState(false);
