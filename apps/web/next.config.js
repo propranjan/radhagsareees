@@ -1,8 +1,9 @@
-// Load and validate environment variables in development only
-if (process.env.NODE_ENV !== 'production') {
+// Load and validate environment variables in local development only
+// Skip on Vercel/CI where env vars are injected by platform
+if (!process.env.VERCEL && !process.env.CI) {
   require('dotenv-safe').config({
     example: '.env.example',
-    allowEmptyValues: false,
+    allowEmptyValues: true,
   });
 }
 
