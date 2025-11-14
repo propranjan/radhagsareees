@@ -49,15 +49,59 @@ This is a monorepo using [Turborepo](https://turbo.build/repo) with the followin
 - **Monorepo**: Turborepo
 - **Deployment**: Vercel (recommended)
 
-## 📦 Installation
+## 🚀 Quick Start
 
-1. **Quick Setup:**
+### Prerequisites
+- Node.js 18+ and pnpm
+- Supabase account (free tier available)
+
+### Installation & Setup
+
+1. **Clone and Install:**
    ```bash
-   pnpm setup
+   git clone https://github.com/propranjan/radhagsareees.git
+   cd radhagsareees
+   pnpm install
    ```
-   This runs: `pnpm install` → `db:generate` → `validate-env`
 
-2. **Manual Setup:**
+2. **Set up Supabase PostgreSQL:**
+   ```bash
+   pnpm supabase:setup
+   ```
+   Follow the [Supabase Setup Guide](./SUPABASE_SETUP.md) for detailed instructions.
+
+3. **Configure Environment:**
+   ```bash
+   # Copy example files
+   cp apps/web/.env.example apps/web/.env.local
+   cp apps/admin/.env.example apps/admin/.env.local
+   
+   # Add your Supabase credentials to .env.local files
+   ```
+
+4. **Initialize Database:**
+   ```bash
+   pnpm db:generate  # Generate Prisma client
+   pnpm db:push      # Sync schema to Supabase
+   pnpm db:seed      # Optional: Add sample data
+   ```
+
+5. **Start Development:**
+   ```bash
+   pnpm dev         # Starts both web and admin apps
+   # Or individually:
+   pnpm web:dev     # Web app only (localhost:3000)
+   pnpm admin:dev   # Admin app only (localhost:3001)
+   ```
+
+### 🐘 Database: Supabase PostgreSQL
+This project uses **Supabase** as the PostgreSQL database provider, offering:
+- Free tier with 500MB database
+- Built-in authentication and real-time subscriptions  
+- Automatic backups and scaling
+- Dashboard for database management
+
+See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for complete setup instructions.
 
    a. Install dependencies:
    ```bash

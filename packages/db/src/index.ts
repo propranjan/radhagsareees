@@ -8,6 +8,22 @@ export const prisma = new PrismaClient({
 // Re-export PrismaClient for direct use
 export { PrismaClient };
 
+// Supabase exports
+export {
+  supabase,
+  supabaseAdmin,
+  getSupabaseClient,
+  getCurrentUser,
+  signOut,
+  from,
+  adminFrom,
+  type SupabaseClient,
+  type SupabaseAdminClient,
+} from './supabase';
+
+// Supabase types
+export type { Database } from './types/supabase';
+
 // Types
 export type {
   User,

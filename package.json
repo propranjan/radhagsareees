@@ -20,7 +20,10 @@
     "test:e2e:debug": "playwright test --debug",
     "db:generate": "turbo run db:generate",
     "db:push": "turbo run db:push",
+    "db:pull": "turbo run db:pull",
     "db:seed": "turbo run db:seed",
+    "supabase:install": "pnpm add @supabase/supabase-js",
+    "supabase:setup": "node scripts/setup-supabase.js",
     "validate-env": "node scripts/validate-env.js",
     "analyze:bundle": "node scripts/analyze-bundle.js",
     "analyze:bundle:web": "node scripts/analyze-bundle.js --app=web",
@@ -49,6 +52,7 @@
     "jest-axe": "^10.0.0",
     "jest-environment-jsdom": "^30.2.0",
     "node-mocks-http": "^1.17.2",
+    "supabase": "^2.58.5",
     "ts-jest": "^29.4.5",
     "turbo": "^1.10.12",
     "webpack-bundle-analyzer": "^4.10.1"
