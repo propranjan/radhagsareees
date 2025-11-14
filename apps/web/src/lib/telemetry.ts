@@ -3,7 +3,7 @@ import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentation
 import { JaegerExporter } from '@opentelemetry/exporter-jaeger';
 import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
-import { Resource } from '@opentelemetry/resources';
+import * as OtelResources from '@opentelemetry/resources';
 import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { trace, SpanKind, SpanStatusCode, context } from '@opentelemetry/api';
@@ -47,6 +47,10 @@ function createTelemetrySDK(): NodeSDK {
       '@opentelemetry/instrumentation-pino': {
         enabled: false,
       },
+      // Disable winston instrumentation to avoid optional dependency
+      '@opentelemetry/instrumentation-winston': {
+        enabled: false,
+      },
     }),
     
     // Custom Pino instrumentation with correlation
@@ -64,18 +68,21 @@ function createTelemetrySDK(): NodeSDK {
     new HttpInstrumentation({
       // Add custom attributes to HTTP spans
       requestHook: (span, request) => {
+        const headers: Record<string, any> = (request as any)?.headers || {};
         span.setAttributes({
-          'http.user_agent': request.headers['user-agent'] || '',
-          'http.x_forwarded_for': request.headers['x-forwarded-for'] || '',
+          'http.user_agent': headers['user-agent'] || '',
+          'http.x_forwarded_for': headers['x-forwarded-for'] || '',
           'service.name': serviceName,
         });
       },
       
       // Add response attributes
       responseHook: (span, response) => {
+        const headers: Record<string, any> = (response as any)?.headers || {};
+        const statusCode: number = (response as any)?.statusCode || 0;
         span.setAttributes({
-          'http.response.status_code': response.statusCode || 0,
-          'http.response.content_length': response.headers['content-length'] || '0',
+          'http.response.status_code': statusCode,
+          'http.response.content_length': headers['content-length'] || '0',
         });
       },
       
@@ -98,9 +105,6 @@ function createTelemetrySDK(): NodeSDK {
     exporters.push(
       new JaegerExporter({
         endpoint: jaegerEndpoint,
-        headers: {
-          'service-name': serviceName,
-        },
       })
     );
   }
@@ -116,7 +120,7 @@ function createTelemetrySDK(): NodeSDK {
   }
 
   return new NodeSDK({
-    resource: new Resource({
+    resource: new OtelResources.Resource({
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: serviceVersion,
       'deployment.environment': environment,
@@ -269,7 +273,7 @@ export class BusinessTracing {
 
   static async traceUserOperation<T>(
     operationType: 'authentication' | 'authorization' | 'profile_update' | 'preference_update',
-    userId?: string,
+    userId: string | undefined,
     operation: () => Promise<T>
   ): Promise<T> {
     const span = tracer.startSpan(`user.${operationType}`, {
