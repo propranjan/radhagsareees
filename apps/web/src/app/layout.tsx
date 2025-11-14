@@ -4,21 +4,11 @@ if (!process.env.VERCEL && !process.env.CI) {
 }
 
 import './globals.css';
-import { Inter, Playfair_Display } from 'next/font/google';
-import { Metadata } from 'next';
-import { Providers } from './providers';
+import type { Metadata } from 'next';
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-});
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair',
-  display: 'swap',
-});
+// Force dynamic rendering for the entire app
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
 
 export const metadata: Metadata = {
   title: 'Radha G Sarees - Exquisite Collection of Traditional Sarees',
@@ -52,13 +42,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
-        <Providers>
-          <div className="min-h-screen bg-gray-50">
-            {children}
-          </div>
-        </Providers>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
+        {children}
       </body>
     </html>
   );
