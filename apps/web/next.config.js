@@ -7,9 +7,9 @@ if (!process.env.VERCEL && !process.env.CI) {
   });
 }
 
-const createNextIntlPlugin = require('next-intl/plugin');
-
-const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
+// Temporarily disable next-intl to fix build issues
+// const createNextIntlPlugin = require('next-intl/plugin');
+// const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -96,4 +96,6 @@ const nextConfig = {
   },
 };
 
-module.exports = withNextIntl(nextConfig);
+// Export without next-intl wrapper for now
+module.exports = nextConfig;
+// module.exports = withNextIntl(nextConfig);
