@@ -3,6 +3,5 @@
   "builds": [
     { "src": "apps/web/package.json", "use": "@vercel/next" }
   ],
-  "installCommand": "pnpm install",
-  "routes": []
+  "installCommand": "pnpm install"
 }
