@@ -39,8 +39,8 @@ export const supabaseAdmin = createClient<Database>(
 export type SupabaseClient = typeof supabase;
 export type SupabaseAdminClient = typeof supabaseAdmin;
 
-// Helper function to check if running on server
-export const isServer = typeof window === 'undefined';
+// Helper function to check if running on server (avoid DOM types)
+export const isServer = typeof (globalThis as any).window === 'undefined';
 
 // Get appropriate client based on environment
 export const getSupabaseClient = (admin = false) => {
