@@ -6,7 +6,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "pnpm dlx prisma@5.22.0 generate && pnpm dlx typescript@5.2.2 -p tsconfig.json",
+    "build": "pnpm dlx prisma@5.22.0 generate && pnpm --package=typescript@5.2.2 dlx tsc -p tsconfig.json",
     "db:generate": "pnpm dlx prisma@5.22.0 generate",
     "db:push": "pnpm dlx prisma@5.22.0 db push",
     "db:pull": "pnpm dlx prisma@5.22.0 db pull",
