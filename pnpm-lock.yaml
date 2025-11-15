@@ -236,6 +236,9 @@ importers:
       '@radhagsareees/analytics':
         specifier: workspace:*
         version: link:../../packages/analytics
+      '@radhagsareees/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@radhagsareees/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -330,9 +333,6 @@ importers:
         specifier: ^3.22.4
         version: 3.25.76
     devDependencies:
-      '@radhagsareees/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       '@types/dotenv-safe':
         specifier: ^8.1.2
         version: 8.1.6
