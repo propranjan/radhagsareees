@@ -21,7 +21,7 @@
     "dist/**"
   ],
   "scripts": {
-    "build": "pnpm --package=tsup@8.5.0 dlx tsup",
+    "build": "pnpm --package=tsup@8.5.0 --package=typescript@5.9.3 dlx tsup",
     "dev": "tsup --watch",
     "clean": "rimraf dist",
     "type-check": "tsc --noEmit",

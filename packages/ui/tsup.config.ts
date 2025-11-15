@@ -1,6 +1,4 @@
-import { defineConfig } from 'tsup';
-
-export default defineConfig({
+export default {
   entry: ['src/index.ts'],
   format: ['cjs', 'esm'],
   dts: false, // Disabled DTS temporarily to fix build issues
@@ -8,4 +6,4 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   external: ['react', 'react-dom'],
-});
+};

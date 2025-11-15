@@ -1,6 +1,4 @@
-import { defineConfig } from 'tsup';
-
-export default defineConfig({
+export default {
   entry: ['src/index.ts', 'src/adapters/index.ts'],
   format: ['cjs', 'esm'],
   dts: false, // Disabled DTS temporarily to fix build issues
@@ -9,4 +7,4 @@ export default defineConfig({
   sourcemap: true,
   minify: process.env.NODE_ENV === 'production',
   external: ['react', 'posthog-js'],
-});
+};
