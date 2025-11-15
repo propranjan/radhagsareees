@@ -245,6 +245,15 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.38.0
         version: 2.81.1
+      '@tailwindcss/aspect-ratio':
+        specifier: ^0.4.2
+        version: 0.4.2(tailwindcss@3.4.18)
+      '@tailwindcss/forms':
+        specifier: ^0.5.10
+        version: 0.5.10(tailwindcss@3.4.18)
+      '@tailwindcss/typography':
+        specifier: ^0.5.19
+        version: 0.5.19(tailwindcss@3.4.18)
       '@tensorflow-models/body-pix':
         specifier: ^2.2.1
         version: 2.2.1(@tensorflow/tfjs-backend-webgl@4.22.0)(@tensorflow/tfjs-converter@4.22.0)(@tensorflow/tfjs-core@4.22.0)
@@ -254,6 +263,9 @@ importers:
       '@types/uuid':
         specifier: ^11.0.0
         version: 11.0.0
+      autoprefixer:
+        specifier: ^10.4.16
+        version: 10.4.21(postcss@8.5.6)
       clsx:
         specifier: ^2.0.0
         version: 2.1.1
@@ -290,6 +302,9 @@ importers:
       pino-pretty:
         specifier: ^13.1.2
         version: 13.1.2
+      postcss:
+        specifier: ^8.4.31
+        version: 8.5.6
       razorpay:
         specifier: ^2.9.2
         version: 2.9.6
@@ -305,6 +320,9 @@ importers:
       tailwind-merge:
         specifier: ^2.0.0
         version: 2.6.0
+      tailwindcss:
+        specifier: ^3.3.5
+        version: 3.4.18
       uuid:
         specifier: ^13.0.0
         version: 13.0.0
@@ -315,15 +333,6 @@ importers:
       '@radhagsareees/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@tailwindcss/aspect-ratio':
-        specifier: ^0.4.2
-        version: 0.4.2(tailwindcss@3.4.18)
-      '@tailwindcss/forms':
-        specifier: ^0.5.10
-        version: 0.5.10(tailwindcss@3.4.18)
-      '@tailwindcss/typography':
-        specifier: ^0.5.19
-        version: 0.5.19(tailwindcss@3.4.18)
       '@types/dotenv-safe':
         specifier: ^8.1.2
         version: 8.1.6
@@ -342,21 +351,12 @@ importers:
       '@types/react-dom':
         specifier: ^18.2.14
         version: 18.3.7(@types/react@18.3.26)
-      autoprefixer:
-        specifier: ^10.4.16
-        version: 10.4.21(postcss@8.5.6)
       eslint:
         specifier: ^8.52.0
         version: 8.57.1
       eslint-config-next:
         specifier: ^14.0.2
         version: 14.2.33(eslint@8.57.1)(typescript@5.9.3)
-      postcss:
-        specifier: ^8.4.31
-        version: 8.5.6
-      tailwindcss:
-        specifier: ^3.3.5
-        version: 3.4.18
       typescript:
         specifier: ^5.2.2
         version: 5.9.3
@@ -5270,7 +5270,6 @@ packages:
       picocolors: 1.1.1
       postcss: 8.5.6
       postcss-value-parser: 4.2.0
-    dev: true
 
   /available-typed-arrays@1.0.7:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
@@ -7607,7 +7606,6 @@ packages:
 
   /fraction.js@4.3.7:
     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
-    dev: true
 
   /fresh@0.5.2:
     resolution: {integrity: sha512-zJ2mQYM18rEFOudeV4GShTGIQ7RbzA7ozbU9I/XBpm7kqgMywgmylMwXHxZJmkVoYkna9d2pVXVXPdYTP9ej8Q==}
@@ -10533,7 +10531,6 @@ packages:
   /normalize-range@0.1.2:
     resolution: {integrity: sha512-bdok/XvKII3nUpklnV6P2hxtMNrCboOjAcyBuQnWEhO665FwrSNRxU+AqpsyvO6LgGYPspN+lu5CLtw4jPRKNA==}
     engines: {node: '>=0.10.0'}
-    dev: true
 
   /npm-normalize-package-bin@5.0.0:
     resolution: {integrity: sha512-CJi3OS4JLsNMmr2u07OJlhcrPxCeOeP/4xq67aWNai6TNWWbTrlNDgl8NcFKVlcBKp18GPj+EzbNIgrBfZhsag==}
