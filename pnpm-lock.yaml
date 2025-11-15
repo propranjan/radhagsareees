@@ -427,6 +427,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.38.0
         version: 2.81.1
+      '@types/node':
+        specifier: ^20.8.9
+        version: 20.19.24
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -437,9 +440,6 @@ importers:
       '@types/bcryptjs':
         specifier: ^2.4.6
         version: 2.4.6
-      '@types/node':
-        specifier: ^20.8.9
-        version: 20.19.24
       eslint:
         specifier: ^8.52.0
         version: 8.57.1
