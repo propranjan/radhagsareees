@@ -21,12 +21,12 @@
   "dependencies": {
     "@prisma/client": "^5.6.0",
     "@supabase/supabase-js": "^2.38.0",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "@types/node": "^20.8.9"
   },
   "devDependencies": {
     "@radhagsareees/config": "workspace:*",
     "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^20.8.9",
     "eslint": "^8.52.0",
     "prisma": "^5.6.0",
     "tsx": "^4.1.4",
