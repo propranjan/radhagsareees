@@ -15,8 +15,8 @@ const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Standalone output for Vercel/Node runtime
-  output: 'standalone',
+  // Use standalone only in CI/Vercel to avoid local Windows symlink issues
+  ...(process.env.VERCEL || process.env.CI ? { output: 'standalone' } : {}),
   typescript: {
     // Temporarily ignore type errors for build
     ignoreBuildErrors: true,
