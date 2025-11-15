@@ -42,5 +42,14 @@
 //   ]
 // };
 
-// Placeholder export to satisfy Next.js
-export { default } from 'next/server';
+// Minimal no-op middleware to avoid invocation errors
+import { NextResponse } from 'next/server';
+
+export function middleware() {
+	return NextResponse.next();
+}
+
+// Disable all matching for now; kept for future i18n re-enable
+export const config = {
+	matcher: []
+};
