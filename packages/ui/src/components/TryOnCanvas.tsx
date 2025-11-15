@@ -35,6 +35,41 @@ import {
 } from 'lucide-react';
 import { getQualityScore, QualityScore } from '../lib/qualityScoring';
 
+// TensorFlow.js and BodyPix will be loaded dynamically
+let tfModule: any = null;
+let bodyPixModule: any = null;
+let loadingPromise: Promise<void> | null = null;
+
+// Function to load TensorFlow modules
+async function loadTensorFlowModules() {
+  if (tfModule && bodyPixModule) {
+    return; // Already loaded
+  }
+  
+  if (loadingPromise) {
+    return loadingPromise; // Already loading
+  }
+  
+  loadingPromise = (async () => {
+    try {
+      console.log('🔄 Loading TensorFlow.js modules...');
+      const [tf, bodyPix] = await Promise.all([
+        import('@tensorflow/tfjs'),
+        import('@tensorflow-models/body-pix')
+      ]);
+      tfModule = tf;
+      bodyPixModule = bodyPix;
+      console.log('✅ TensorFlow.js modules loaded successfully');
+    } catch (error) {
+      console.error('❌ Failed to load TensorFlow modules:', error);
+      loadingPromise = null; // Reset so we can retry
+      throw error;
+    }
+  })();
+  
+  return loadingPromise;
+}
+
 // Extend Window interface for TensorFlow.js
 declare global {
   interface Window {
@@ -166,9 +201,19 @@ export function TryOnCanvas({
   const [isProcessing, setIsProcessing] = useState(false);
   const [meshPoints, setMeshPoints] = useState<MeshPoint[]>([]);
   const [qualityScore, setQualityScore] = useState<QualityScore | null>(null);
+  const [forceShowGarment, setForceShowGarment] = useState(true); // Toggle for forced/automatic mode
   
   // Animation frame ID
   const animationFrameRef = useRef<number>();
+  
+  // Ref to track if component is mounted (for cleanup)
+  const isMountedRef = useRef(true);
+  
+  // Ref to track if model loading is in progress (for guard clause)
+  const isLoadingRef = useRef(false);
+  
+  // Frame counter for debugging
+  const frameCountRef = useRef(0);
   
   // Memoized transform values for performance
   const transformMatrix = useMemo(() => {
@@ -211,41 +256,96 @@ export function TryOnCanvas({
    * Load TensorFlow.js and BodyPix model
    */
   const loadModel = useCallback(async () => {
+    console.log('🔍 loadModel called - Current state:', { 
+      hasModel: !!model, 
+      isLoading, 
+      isLoadingRef: isLoadingRef.current,
+      hasError: !!error,
+      isMounted: isMountedRef.current
+    });
+    
+    // Prevent loading if already loading or loaded (use ref for immediate check)
+    if (model || isLoadingRef.current) {
+      console.log('⏭️ Model already loaded or loading, skipping...', {
+        reason: model ? 'model exists' : 'isLoadingRef is true'
+      });
+      return;
+    }
+
     try {
+      isLoadingRef.current = true;
       setIsLoading(true);
       setError(null);
 
-      // Load TensorFlow.js and BodyPix from CDN
-      if (typeof window !== 'undefined' && !window.tf) {
-        await new Promise<void>((resolve, reject) => {
-          const script1 = document.createElement('script');
-          script1.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js';
-          script1.onload = () => {
-            const script2 = document.createElement('script');
-            script2.src = 'https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.1/dist/body-pix.min.js';
-            script2.onload = () => resolve();
-            script2.onerror = () => reject(new Error('Failed to load BodyPix'));
-            document.head.appendChild(script2);
-          };
-          script1.onerror = () => reject(new Error('Failed to load TensorFlow.js'));
-          document.head.appendChild(script1);
-        });
+      console.log('🔄 Loading TensorFlow.js and BodyPix...');
+      console.log('📦 Starting module imports...');
+      
+      // Load the TensorFlow modules
+      await loadTensorFlowModules();
+
+      // Check if component was unmounted during async operation
+      if (!isMountedRef.current) {
+        console.log('⚠️ Component unmounted during module load, aborting...');
+        isLoadingRef.current = false;
+        setIsLoading(false);
+        return;
       }
 
-      // Load BodyPix model
-      const bodyPix = window.bodyPix;
-      if (!bodyPix) {
-        throw new Error('BodyPix failed to load');
-      }
-
-      const loadedModel = await bodyPix.load({
-        architecture: 'MobileNetV1',
-        outputStride: 16,
-        multiplier: 0.75,
-        quantBytes: 2,
+      console.log('🔍 Checking loaded modules:', { 
+        tfModule: !!tfModule, 
+        bodyPixModule: !!bodyPixModule,
+        bodyPixLoad: !!(bodyPixModule?.load)
       });
 
-      setModel(loadedModel);
+      if (!bodyPixModule || !bodyPixModule.load) {
+        throw new Error(
+          'BodyPix failed to load. Please refresh the page and try again.'
+        );
+      }
+
+      console.log('✅ Libraries loaded, initializing BodyPix model...');
+      console.log('🔄 Loading BodyPix model (this may take 30-60 seconds)...');
+      console.log('📊 Progress: Downloading model files from Google Cloud Storage...');
+      console.log('⚙️ Model config:', { architecture: 'MobileNetV1', outputStride: 16, multiplier: 0.50, quantBytes: 2 });
+      
+      // Create timeout controller
+      let timeoutId: NodeJS.Timeout | undefined;
+      const timeoutController = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          console.error('❌ Model loading timeout - this usually means network issues');
+          reject(new Error('Model loading timeout after 45 seconds. Please check your internet connection and try again.'));
+        }, 45000);
+      });
+
+      let loadedModel;
+      try {
+        // Load model with simpler configuration for faster loading
+        console.log('🚀 Calling bodyPixModule.load()...');
+        const modelLoadPromise = bodyPixModule.load({
+          architecture: 'MobileNetV1',
+          outputStride: 16,
+          multiplier: 0.50, // Reduced from 0.75 for faster loading
+          quantBytes: 2,
+        });
+
+        console.log('⏳ Waiting for model to load (racing with 45s timeout)...');
+        loadedModel = await Promise.race([modelLoadPromise, timeoutController]);
+        if (timeoutId) clearTimeout(timeoutId);
+
+        // Check again if component was unmounted
+        if (!isMountedRef.current) {
+          console.log('⚠️ Component unmounted during model load, aborting...');
+          isLoadingRef.current = false;
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('✅ BodyPix model loaded successfully');
+        setModel(loadedModel);
+      } catch (err) {
+        if (timeoutId) clearTimeout(timeoutId);
+        throw err;
+      }
       
       const modelInfo: ModelInfo = {
         name: 'BodyPix MobileNetV1',
@@ -255,13 +355,28 @@ export function TryOnCanvas({
       };
 
       onReady?.(modelInfo);
+      isLoadingRef.current = false;
       setIsLoading(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load AI model';
+      console.error('❌ Model loading error:', err);
       setError(errorMessage);
+      isLoadingRef.current = false;
       setIsLoading(false);
+      // Allow retry by resetting model state
+      setModel(null);
     }
-  }, [width, height, onReady]);
+  }, [model, isLoading, width, height, onReady]);
+
+  /**
+   * Retry loading the model
+   */
+  const retryLoadModel = useCallback(() => {
+    setError(null);
+    setModel(null);
+    isLoadingRef.current = false; // Reset ref to allow retry
+    loadModel();
+  }, [loadModel]);
 
   /**
    * Initialize webcam stream
@@ -280,9 +395,11 @@ export function TryOnCanvas({
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
+          console.log('📹 Video metadata loaded, starting recording');
           videoRef.current?.play();
           setIsRecording(true);
           setWebcamPermission('granted');
+          console.log('✅ isRecording set to true');
         };
       }
     } catch (err) {
@@ -296,19 +413,31 @@ export function TryOnCanvas({
    */
   const processFrame = useCallback(async () => {
     if (!model || !videoRef.current || !canvasRef.current || !garmentImageRef.current) {
+      if (!garmentImageRef.current) {
+        console.warn('⚠️ Garment image not loaded yet');
+      }
       return;
     }
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     const overlayCanvas = overlayCanvasRef.current;
-    const overlayCtx = overlayCanvas?.getContext('2d');
+    const overlayCtx = overlayCanvas?.getContext('2d', { willReadFrequently: true });
 
     if (!ctx || !overlayCanvas || !overlayCtx) return;
 
     try {
       setIsProcessing(true);
+      
+      // Log first few frames
+      frameCountRef.current++;
+      if (frameCountRef.current <= 3) {
+        console.log(`🎥 Processing frame ${frameCountRef.current}`, {
+          videoReady: video.readyState === 4,
+          garmentLoaded: garmentImageRef.current?.complete
+        });
+      }
 
       // Perform person segmentation
       const segmentation = await model.segmentPerson(video, {
@@ -349,11 +478,25 @@ export function TryOnCanvas({
       const currentQualityScore = getQualityScore(segmentation, imageData, width, height);
       setQualityScore(currentQualityScore);
       
-      const poseOk = currentQualityScore.overall >= 0.7;
-      onPoseState?.(poseOk);
+      // Use toggle to determine if garment should show
+      const poseOk = forceShowGarment ? true : currentQualityScore.overall >= 0.7;
+      onPoseState?.(currentQualityScore.overall >= 0.7); // Always report actual quality
+      
+      // Log quality score for first few frames
+      if (frameCountRef.current <= 5) {
+        console.log(`📊 Quality score frame ${frameCountRef.current}:`, {
+          overall: currentQualityScore.overall,
+          actualPoseOk: currentQualityScore.overall >= 0.7,
+          forceShowGarment,
+          willShow: poseOk
+        });
+      }
 
-      // Draw garment overlay if person is detected
+      // Draw garment overlay
       if (poseOk) {
+        if (frameCountRef.current <= 3) {
+          console.log('🎨 Drawing garment overlay');
+        }
         overlayCtx.save();
         overlayCtx.globalAlpha = transformMatrix.opacity;
         
@@ -405,6 +548,18 @@ export function TryOnCanvas({
     processFrame();
     animationFrameRef.current = requestAnimationFrame(animate);
   }, [processFrame]);
+
+  // Log when animation starts
+  useEffect(() => {
+    if (isRecording && model) {
+      console.log('🎬 Starting animation loop', { 
+        hasModel: !!model, 
+        isRecording, 
+        hasGarmentImage: !!garmentImageRef.current,
+        garmentImageLoaded: garmentImageRef.current?.complete
+      });
+    }
+  }, [isRecording, model]);
 
   /**
    * Capture current frame as image
@@ -474,11 +629,25 @@ export function TryOnCanvas({
     }
   }, [showControls, captureImage]);
 
-  // Initialize component
+  // Initialize component - load model only once on mount
   useEffect(() => {
+    console.log('🎬 TryOnCanvas mounted - Starting initialization');
+    isMountedRef.current = true;
+    isLoadingRef.current = false; // Reset on mount
+    
     loadModel();
     initializeMeshGrid();
-  }, [loadModel, initializeMeshGrid]);
+    
+    return () => {
+      console.log('🧹 TryOnCanvas unmounting - cleaning up');
+      isMountedRef.current = false;
+      isLoadingRef.current = false; // Reset ref immediately
+      // Reset loading state so remounting can try again (important for React Strict Mode)
+      setIsLoading(false);
+      setError(null);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only run once on mount
 
   // Setup webcam when model is ready
   useEffect(() => {
@@ -489,7 +658,9 @@ export function TryOnCanvas({
 
   // Start animation loop when recording
   useEffect(() => {
+    console.log('🔄 Animation effect triggered', { isRecording, hasModel: !!model });
     if (isRecording && model) {
+      console.log('🎬 Starting animation loop...');
       animate();
     }
     
@@ -509,33 +680,46 @@ export function TryOnCanvas({
   // Load garment image
   useEffect(() => {
     if (garmentImageUrl && garmentImageRef.current) {
+      console.log('🖼️ Loading garment image:', garmentImageUrl);
+      garmentImageRef.current.onload = () => {
+        console.log('✅ Garment image loaded:', {
+          width: garmentImageRef.current?.width,
+          height: garmentImageRef.current?.height,
+          url: garmentImageUrl
+        });
+      };
+      garmentImageRef.current.onerror = (err) => {
+        console.error('❌ Failed to load garment image:', err);
+      };
       garmentImageRef.current.src = garmentImageUrl;
     }
   }, [garmentImageUrl]);
 
   return (
-    <div 
-      className={`relative bg-gray-900 rounded-lg overflow-hidden ${className}`}
-      role="application"
-      aria-label="Virtual Try-On Canvas"
-    >
-      {/* Hidden elements */}
-      <video
-        ref={videoRef}
-        className="hidden"
-        width={width}
-        height={height}
-        autoPlay
-        muted
-        playsInline
-      />
-      
-      <canvas
-        ref={overlayCanvasRef}
-        width={width}
-        height={height}
-        className="hidden"
-      />
+    <div className="space-y-4">
+      {/* Video Display Area */}
+      <div 
+        className={`relative bg-gray-900 rounded-lg overflow-hidden ${className}`}
+        role="application"
+        aria-label="Virtual Try-On Canvas"
+      >
+        {/* Hidden elements */}
+        <video
+          ref={videoRef}
+          className="hidden"
+          width={width}
+          height={height}
+          autoPlay
+          muted
+          playsInline
+        />
+        
+        <canvas
+          ref={overlayCanvasRef}
+          width={width}
+          height={height}
+          className="hidden"
+        />
       
       <img
         ref={garmentImageRef}
@@ -556,9 +740,13 @@ export function TryOnCanvas({
       {/* Loading overlay */}
       {isLoading && (
         <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center">
-          <div className="text-center text-white">
-            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
-            <p>Loading AI model...</p>
+          <div className="text-center text-white px-4">
+            <div className="w-8 h-8 mx-auto mb-2">
+              <RefreshCw className="w-full h-full animate-spin" />
+            </div>
+            <p className="font-semibold">Loading AI model...</p>
+            <p className="text-sm text-gray-300 mt-2">This may take 30-60 seconds on first load</p>
+            <p className="text-xs text-gray-400 mt-1">Downloading TensorFlow.js libraries</p>
           </div>
         </div>
       )}
@@ -567,157 +755,40 @@ export function TryOnCanvas({
       {error && (
         <div className="absolute inset-0 bg-red-900 bg-opacity-75 flex items-center justify-center p-4">
           <div className="text-center text-white max-w-md">
-            <CameraOff className="w-8 h-8 mx-auto mb-2" />
-            <p className="font-semibold mb-2">Error</p>
-            <p className="text-sm">{error}</p>
-            {webcamPermission === 'denied' && (
+            <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
+            <p className="font-semibold mb-2">Error Loading AI Model</p>
+            <p className="text-sm mb-4">{error}</p>
+            <div className="space-y-2">
+              {webcamPermission === 'denied' && (
+                <button
+                  onClick={initializeWebcam}
+                  className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                >
+                  Retry Camera Access
+                </button>
+              )}
               <button
-                onClick={initializeWebcam}
-                className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                onClick={retryLoadModel}
+                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
               >
-                Retry Camera Access
+                Retry Loading Model
               </button>
-            )}
+              <p className="text-xs mt-2 opacity-75">
+                Tip: Check your internet connection and firewall settings
+              </p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Pose Quality Banner */}
-      {isRecording && qualityScore && qualityScore.overall < 0.7 && (
+      {/* Pose Quality Banner (kept minimal inside video) */}
+      {isRecording && qualityScore && qualityScore.overall < 0.7 && !forceShowGarment && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
           <div className="bg-yellow-500 bg-opacity-90 backdrop-blur-sm text-white px-4 py-2 rounded-lg flex items-center space-x-2 shadow-lg">
             <AlertTriangle className="w-4 h-4" />
             <span className="text-sm font-medium">{qualityScore.feedback}</span>
           </div>
         </div>
-      )}
-
-      {/* Controls */}
-      {showControls && isRecording && (
-        <div className="absolute top-4 left-4 right-4">
-          <div className="bg-black bg-opacity-50 backdrop-blur-sm rounded-lg p-4 space-y-4">
-            {/* Position Controls */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-white text-sm mb-1">
-                  Position X: {transform.x}
-                </label>
-                <input
-                  type="range"
-                  min="-200"
-                  max="200"
-                  value={transform.x}
-                  onChange={(e) => setTransform((prev: GarmentTransform) => ({ ...prev, x: Number(e.target.value) }))}
-                  className="w-full"
-                  aria-label="Horizontal position"
-                />
-              </div>
-              <div>
-                <label className="block text-white text-sm mb-1">
-                  Position Y: {transform.y}
-                </label>
-                <input
-                  type="range"
-                  min="-200"
-                  max="200"
-                  value={transform.y}
-                  onChange={(e) => setTransform((prev: GarmentTransform) => ({ ...prev, y: Number(e.target.value) }))}
-                  className="w-full"
-                  aria-label="Vertical position"
-                />
-              </div>
-            </div>
-
-            {/* Scale, Rotation, Opacity */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-white text-sm mb-1">
-                  Scale: {transform.scale.toFixed(2)}
-                </label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="3"
-                  step="0.05"
-                  value={transform.scale}
-                  onChange={(e) => setTransform((prev: GarmentTransform) => ({ ...prev, scale: Number(e.target.value) }))}
-                  className="w-full"
-                  aria-label="Scale"
-                />
-              </div>
-              <div>
-                <label className="block text-white text-sm mb-1">
-                  Rotation: {transform.rotation}°
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="360"
-                  value={transform.rotation}
-                  onChange={(e) => setTransform((prev: GarmentTransform) => ({ ...prev, rotation: Number(e.target.value) }))}
-                  className="w-full"
-                  aria-label="Rotation"
-                />
-              </div>
-              <div>
-                <label className="block text-white text-sm mb-1">
-                  Opacity: {Math.round(transform.opacity * 100)}%
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={transform.opacity}
-                  onChange={(e) => setTransform((prev: GarmentTransform) => ({ ...prev, opacity: Number(e.target.value) }))}
-                  className="w-full"
-                  aria-label="Opacity"
-                />
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex justify-between items-center">
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setShowControls(false)}
-                  className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition-colors"
-                  aria-label="Hide controls"
-                >
-                  <EyeOff className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setTransform(DEFAULT_TRANSFORM)}
-                  className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white text-sm transition-colors"
-                  aria-label="Reset transform"
-                >
-                  Reset
-                </button>
-              </div>
-              
-              <button
-                onClick={captureImage}
-                disabled={isProcessing}
-                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-600 rounded-lg text-white font-medium transition-colors flex items-center space-x-2"
-                aria-label="Capture image"
-              >
-                <Camera className="w-4 h-4" />
-                <span>Capture</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Toggle controls button when hidden */}
-      {!showControls && isRecording && (
-        <button
-          onClick={() => setShowControls(true)}
-          className="absolute top-4 right-4 p-2 bg-black bg-opacity-50 hover:bg-opacity-75 rounded-lg text-white transition-colors"
-          aria-label="Show controls"
-        >
-          <Eye className="w-4 h-4" />
-        </button>
       )}
 
       {/* Processing indicator */}
@@ -742,6 +813,180 @@ export function TryOnCanvas({
           <kbd className="px-1 py-0.5 bg-gray-700 rounded">Space</kbd> Capture
         </div>
       </div>
+      </div> {/* End video display area */}
+      
+      {/* Detection Score Display (when in Auto mode) */}
+      {!forceShowGarment && isRecording && qualityScore && (
+        <div className="bg-gray-800 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white text-sm font-medium">Detection Score</p>
+              <p className="text-gray-400 text-xs mt-1">{qualityScore.feedback}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-white">
+                {(qualityScore.overall * 100).toFixed(0)}%
+              </p>
+              <p className={`text-xs font-medium ${qualityScore.overall >= 0.7 ? 'text-green-400' : 'text-orange-400'}`}>
+                {qualityScore.overall >= 0.7 ? '✓ Good' : '⚠ Improve'}
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 bg-gray-700 rounded-full h-2 overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-300 ${
+                qualityScore.overall >= 0.7 ? 'bg-green-500' : 'bg-orange-500'
+              }`}
+              style={{ width: `${Math.min(qualityScore.overall * 100, 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Controls Panel (outside video) */}
+      {showControls && isRecording && (
+        <div className="bg-gray-800 rounded-lg p-4 space-y-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-medium">Garment Controls</h3>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setForceShowGarment(!forceShowGarment)}
+                className={`px-3 py-1.5 rounded-lg text-white text-sm transition-colors ${
+                  forceShowGarment 
+                    ? 'bg-green-600 hover:bg-green-700' 
+                    : 'bg-orange-600 hover:bg-orange-700'
+                }`}
+                title={forceShowGarment ? 'Always Show (Click for Auto Detect)' : 'Auto Detect (Click for Always Show)'}
+              >
+                {forceShowGarment ? '🔒 Always' : '🤖 Auto'}
+              </button>
+              <button
+                onClick={() => setShowControls(false)}
+                className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition-colors"
+                aria-label="Hide controls"
+              >
+                <EyeOff className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Position Controls */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-white text-sm mb-1">
+                Position X: {transform.x}
+              </label>
+              <input
+                type="range"
+                min="-200"
+                max="200"
+                value={transform.x}
+                onChange={(e) => setTransform((prev: GarmentTransform) => ({ ...prev, x: Number(e.target.value) }))}
+                className="w-full"
+                aria-label="Horizontal position"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-white text-sm mb-1">
+                Position Y: {transform.y}
+              </label>
+              <input
+                type="range"
+                min="-200"
+                max="200"
+                value={transform.y}
+                onChange={(e) => setTransform((prev: GarmentTransform) => ({ ...prev, y: Number(e.target.value) }))}
+                className="w-full"
+                aria-label="Vertical position"
+              />
+            </div>
+          </div>
+
+          {/* Scale and Rotation */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-white text-sm mb-1">
+                Scale: {transform.scale.toFixed(2)}x
+              </label>
+              <input
+                type="range"
+                min="0.5"
+                max="3"
+                step="0.1"
+                value={transform.scale}
+                onChange={(e) => setTransform((prev: GarmentTransform) => ({ ...prev, scale: Number(e.target.value) }))}
+                className="w-full"
+                aria-label="Scale"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-white text-sm mb-1">
+                Rotation: {transform.rotation}°
+              </label>
+              <input
+                type="range"
+                min="-180"
+                max="180"
+                value={transform.rotation}
+                onChange={(e) => setTransform((prev: GarmentTransform) => ({ ...prev, rotation: Number(e.target.value) }))}
+                className="w-full"
+                aria-label="Rotation"
+              />
+            </div>
+          </div>
+
+          {/* Opacity */}
+          <div>
+            <label className="block text-white text-sm mb-1">
+              Opacity: {Math.round(transform.opacity * 100)}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={transform.opacity}
+              onChange={(e) => setTransform((prev: GarmentTransform) => ({ ...prev, opacity: Number(e.target.value) }))}
+              className="w-full"
+              aria-label="Opacity"
+            />
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex justify-between items-center pt-2 border-t border-gray-700">
+            <button
+              onClick={() => setTransform(DEFAULT_TRANSFORM)}
+              className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white text-sm transition-colors"
+              aria-label="Reset transform"
+            >
+              Reset Position
+            </button>
+            
+            <button
+              onClick={captureImage}
+              disabled={isProcessing}
+              className="px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-600 rounded-lg text-white font-medium transition-colors flex items-center space-x-2"
+              aria-label="Capture image"
+            >
+              <Camera className="w-4 h-4" />
+              <span>Capture</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Toggle controls button when hidden */}
+      {!showControls && isRecording && (
+        <button
+          onClick={() => setShowControls(true)}
+          className="fixed bottom-4 right-4 p-3 bg-primary-600 hover:bg-primary-700 rounded-full text-white shadow-lg transition-colors"
+          aria-label="Show controls"
+        >
+          <Eye className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 }

@@ -11,8 +11,8 @@ export default function TryOnDemoPage() {
   const [poseState, setPoseState] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
-  // Sample saree image URL (you can replace with actual product images)
-  const garmentImageUrl = 'https://images.unsplash.com/photo-1594736797933-d0d50940077e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+  // Sample saree image URL - using a reliable CDN image
+  const garmentImageUrl = 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop';
 
   // Try-On Synthesis Hook
   const synthesis = useTryOnSynthesis({

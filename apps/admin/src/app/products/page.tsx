@@ -32,8 +32,10 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'new' | 'featured'>('all');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     fetchProducts();
   }, []);
 
@@ -42,7 +44,7 @@ export default function ProductsPage() {
       setLoading(true);
       const response = await fetch('/api/admin/products');
       const data = await response.json();
-      setProducts(data);
+      setProducts(data.products || []);
     } catch (error) {
       console.error('Failed to fetch products:', error);
     } finally {
@@ -95,7 +97,7 @@ export default function ProductsPage() {
     return variants.reduce((sum, variant) => sum + variant.inventory.qtyAvailable, 0);
   };
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

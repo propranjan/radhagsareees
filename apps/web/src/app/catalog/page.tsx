@@ -3,39 +3,51 @@
 import { ProductCard } from '@radhagsareees/ui';
 import Link from 'next/link';
 import { Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 export default function CatalogPage() {
-  // Mock products data - in real app, this would come from API/database
-  const products = [
-    {
-      id: '1',
-      name: 'Royal Red Silk Saree',
-      price: 12999,
-      originalPrice: 15999,
-      image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500',
-      rating: 4.8,
-      reviewCount: 24,
-      category: 'Silk Sarees',
-      isNew: true,
-      isSale: true,
-    },
-    {
-      id: '2',
-      name: 'Elegant Blue Cotton Saree',
-      price: 2999,
-      originalPrice: 3999,
-      image: 'https://images.unsplash.com/photo-1594736797933-d0401ba0ad84?w=500',
-      rating: 4.2,
-      reviewCount: 18,
-      category: 'Cotton Sarees',
-      isNew: false,
-      isSale: true,
-    },
-    // Add more mock products...
-  ];
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const category = searchParams?.get('category') || '';
+    setSelectedCategory(category);
+    fetchProducts(category);
+  }, [searchParams]);
+
+  const fetchProducts = async (category?: string) => {
+    try {
+      setLoading(true);
+      const url = category ? `/api/products?category=${category}` : '/api/products';
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        setProducts(data.products || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+
+  const categoryTitle = selectedCategory 
+    ? selectedCategory.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    : 'All Sarees';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -44,8 +56,12 @@ export default function CatalogPage() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-serif font-bold text-gray-900">Saree Collection</h1>
-              <p className="text-gray-600 mt-2">Discover our complete range of beautiful sarees</p>
+              <h1 className="text-3xl font-serif font-bold text-gray-900">{categoryTitle}</h1>
+              <p className="text-gray-600 mt-2">
+                {selectedCategory 
+                  ? `Browse our collection of ${categoryTitle.toLowerCase()}` 
+                  : 'Discover our complete range of beautiful sarees'}
+              </p>
             </div>
             <div className="flex items-center space-x-4">
               <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">

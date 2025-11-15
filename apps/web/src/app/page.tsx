@@ -102,7 +102,7 @@ export default function HomePage() {
                   Shop Collection
                 </Link>
                 <Link
-                  href="/virtual-tryon"
+                  href="/try-on"
                   className="border border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white px-8 py-3 rounded-lg font-semibold transition-colors text-center"
                 >
                   Try Virtual Fitting
@@ -248,9 +248,9 @@ export default function HomePage() {
             <div>
               <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><Link href="/catalog" className="hover:text-white transition-colors">Shop All</Link></li>
+                <li><Link href="/catalog" className="hover:text-white transition-colors">Catalog</Link></li>
                 <li><Link href="/categories" className="hover:text-white transition-colors">Categories</Link></li>
-                <li><Link href="/virtual-tryon" className="hover:text-white transition-colors">Virtual Try-On</Link></li>
+                <li><Link href="/try-on" className="hover:text-white transition-colors">Virtual Try-On</Link></li>
                 <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
               </ul>
             </div>

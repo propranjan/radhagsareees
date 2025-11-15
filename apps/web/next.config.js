@@ -54,11 +54,11 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              `script-src 'self' ${isDev ? "'unsafe-eval' 'unsafe-inline'" : ''} https://checkout.razorpay.com https://www.googletagmanager.com`,
+              `script-src 'self' ${isDev ? "'unsafe-eval' 'unsafe-inline'" : ''} https://checkout.razorpay.com https://www.googletagmanager.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com`,
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://www.google-analytics.com",
               "font-src 'self' https://fonts.gstatic.com",
-              `connect-src 'self' https://api.razorpay.com https://www.google-analytics.com https://api.cloudinary.com ${isDev ? 'ws://localhost:* http://localhost:*' : ''}`,
+              `connect-src 'self' https://api.razorpay.com https://www.google-analytics.com https://api.cloudinary.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com https://storage.googleapis.com ${isDev ? 'ws://localhost:* http://localhost:*' : ''}`,
               "frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com",
               "media-src 'self' blob: https://res.cloudinary.com",
               "worker-src 'self' blob:",
