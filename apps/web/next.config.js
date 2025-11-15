@@ -11,6 +11,8 @@ if (!process.env.VERCEL && !process.env.CI) {
 // const createNextIntlPlugin = require('next-intl/plugin');
 // const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Standalone output for Vercel/Node runtime
@@ -31,6 +33,13 @@ const nextConfig = {
   env: {
     // Make sure these are available to the client
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+  },
+  // Ensure webpack resolves TypeScript path alias `@/*` to `src/*`
+  webpack: (config) => {
+    config.resolve = config.resolve || {};
+    config.resolve.alias = config.resolve.alias || {};
+    config.resolve.alias['@'] = path.resolve(__dirname, 'src');
+    return config;
   },
   // Security headers
   async headers() {
