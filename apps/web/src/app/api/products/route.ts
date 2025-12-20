@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@radhagsareees/db';
-
-const prisma = new PrismaClient();
+import { prisma } from '@radhagsareees/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -95,7 +93,5 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch products' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

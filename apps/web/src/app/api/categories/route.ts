@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@radhagsareees/db';
-
-const prisma = new PrismaClient();
+import { prisma } from '@radhagsareees/db';
 
 export async function GET() {
   try {
@@ -37,7 +35,5 @@ export async function GET() {
       { error: 'Failed to fetch categories' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
