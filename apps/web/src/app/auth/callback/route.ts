@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { prisma } from '@radhagsareees/db';
 
 /**
  * Auth Callback Handler
  * Handles OAuth callbacks from providers (Google, GitHub, etc.)
  * and Supabase authentication redirects
+ * Also creates/updates user records in the database
  */
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -46,6 +48,35 @@ export async function GET(request: NextRequest) {
     const errorUrl = new URL('/auth/error', request.url);
     errorUrl.searchParams.set('error', exchangeError.message);
     return NextResponse.redirect(errorUrl);
+  }
+
+  // Sync user to database
+  if (data.user) {
+    try {
+      await prisma.user.upsert({
+        where: { id: data.user.id },
+        update: {
+          email: data.user.email || '',
+          name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
+          avatar: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || null,
+          phone: data.user.phone || null,
+          updatedAt: new Date(),
+        },
+        create: {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
+          avatar: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || null,
+          phone: data.user.phone || null,
+          role: 'CUSTOMER',
+          isActive: true,
+        },
+      });
+      console.log('User synced to database:', data.user.id);
+    } catch (dbError) {
+      console.error('Error syncing user to database:', dbError);
+      // Don't fail the auth flow if DB sync fails
+    }
   }
 
   // Get the next URL from query params or default to home

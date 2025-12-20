@@ -33,7 +33,7 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -42,6 +42,26 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
       return;
+    }
+
+    // Sync user to database after successful login
+    if (data.user) {
+      try {
+        await fetch('/api/auth/sync-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
+            avatar: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || null,
+            phone: data.user.phone || null,
+          }),
+        });
+      } catch (syncError) {
+        console.error('Error syncing user:', syncError);
+        // Don't block login if sync fails
+      }
     }
 
     // Handle OAuth redirect if needed
