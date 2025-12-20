@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
@@ -18,7 +18,14 @@ export default function SignUpPage() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  const supabase = useMemo(() => {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return null;
+    }
+    return createClient(supabaseUrl, supabaseAnonKey);
+  }, [supabaseUrl, supabaseAnonKey]);
+
+  if (!supabase) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -27,8 +34,6 @@ export default function SignUpPage() {
       </div>
     );
   }
-
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +75,7 @@ export default function SignUpPage() {
     // Sync user to database
     if (data.user) {
       try {
-        await fetch('/api/auth/sync-user', {
+        const syncResponse = await fetch('/api/auth/sync-user', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -81,6 +86,10 @@ export default function SignUpPage() {
             phone: null,
           }),
         });
+        
+        if (!syncResponse.ok) {
+          console.error('Failed to sync user to database:', await syncResponse.text());
+        }
       } catch (syncError) {
         console.error('Error syncing user:', syncError);
         // Don't block signup if sync fails
