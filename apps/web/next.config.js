@@ -60,7 +60,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://www.google-analytics.com",
               "font-src 'self' https://fonts.gstatic.com",
-              `connect-src 'self' https://api.razorpay.com https://www.google-analytics.com https://api.cloudinary.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com https://storage.googleapis.com ${isDev ? 'ws://localhost:* http://localhost:*' : ''}`,
+              `connect-src 'self' https://ipankxazdueozqgwjjei.supabase.co https://api.razorpay.com https://www.google-analytics.com https://api.cloudinary.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com https://storage.googleapis.com ${isDev ? 'ws://localhost:* http://localhost:*' : ''}`,
               "frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com",
               "media-src 'self' blob: https://res.cloudinary.com",
               "worker-src 'self' blob:",
