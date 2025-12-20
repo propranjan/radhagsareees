@@ -3,9 +3,11 @@ import { PrismaClient } from '@radhagsareees/db';
 
 const prisma = new PrismaClient();
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const category = searchParams.get('category');
     const featured = searchParams.get('featured');
     const limit = parseInt(searchParams.get('limit') || '50');
