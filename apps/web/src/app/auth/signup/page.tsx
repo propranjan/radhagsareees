@@ -67,8 +67,16 @@ export default function SignUpPage() {
         },
       });
 
+      console.log('Signup response:', { data, error: signUpError });
+
       if (signUpError) {
         setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!data.user) {
+        setError('Signup succeeded but no user data returned. Please check your email.');
         setLoading(false);
         return;
       }
@@ -76,6 +84,7 @@ export default function SignUpPage() {
       // Sync user to database
       if (data.user) {
         try {
+          console.log('Syncing user to database:', data.user.id);
           const syncResponse = await fetch('/api/auth/sync-user', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -88,17 +97,26 @@ export default function SignUpPage() {
             }),
           });
           
+          console.log('Sync response status:', syncResponse.status);
+          
           if (!syncResponse.ok) {
             const errorText = await syncResponse.text();
             console.error('Failed to sync user to database:', errorText);
+            // Don't fail signup if sync fails
+            setSuccess('Account created successfully! However, there was an issue syncing your profile. Please contact support if you have issues logging in.');
+          } else {
+            const syncData = await syncResponse.json();
+            console.log('User synced successfully:', syncData);
+            setSuccess('Account created successfully! Please check your email to verify your account.');
           }
         } catch (syncError) {
           console.error('Error syncing user:', syncError);
           // Don't block signup if sync fails
+          setSuccess('Account created successfully! Your profile will be synced on first login.');
         }
+      } else {
+        setSuccess('Account created successfully! Please check your email to verify your account.');
       }
-
-      setSuccess('Account created successfully! Please check your email to verify your account.');
       setLoading(false);
       
       // Redirect to login after 2 seconds
