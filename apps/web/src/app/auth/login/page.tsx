@@ -209,6 +209,7 @@ export default function LoginPage() {
             Continue with Google
           </button>
 
+          {/* GitHub OAuth temporarily disabled - needs configuration in Supabase
           <button
             onClick={() => handleOAuthLogin('github')}
             disabled={loading}
@@ -219,6 +220,7 @@ export default function LoginPage() {
             </svg>
             Continue with GitHub
           </button>
+          */}
         </div>
 
         <p className="text-center text-sm text-gray-600 mt-6">
