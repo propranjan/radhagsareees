@@ -22,7 +22,13 @@ export default function AuthErrorPage() {
       return 'You denied access to the application. Please try again if you want to sign in.';
     }
     if (error === 'missing_code') {
-      return 'Authentication failed. The authorization code was missing.';
+      return 'The OAuth provider did not return an authorization code. This usually means the provider (GitHub/Google) is not properly configured in the authentication system.';
+    }
+    if (error === 'exchange_failed') {
+      return 'Failed to exchange authorization code for session. The provider credentials may be incorrect.';
+    }
+    if (error === 'no_session') {
+      return 'Authentication succeeded but no session was created. Please try again or use email/password login.';
     }
     if (error === 'server_error') {
       return 'Server configuration error. Please contact support.';

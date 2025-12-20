@@ -14,6 +14,15 @@ export async function GET(request: NextRequest) {
   const error = requestUrl.searchParams.get('error');
   const error_description = requestUrl.searchParams.get('error_description');
 
+  // Log all parameters for debugging
+  console.log('Auth callback received:', {
+    code: code ? 'present' : 'missing',
+    error,
+    error_description,
+    allParams: Object.fromEntries(requestUrl.searchParams.entries()),
+    fullUrl: requestUrl.toString(),
+  });
+
   // Handle OAuth errors
   if (error) {
     console.error('OAuth error:', error, error_description);
@@ -26,7 +35,11 @@ export async function GET(request: NextRequest) {
   }
 
   if (!code) {
-    return NextResponse.redirect(new URL('/auth/error?error=missing_code', request.url));
+    console.error('Missing authorization code in callback');
+    const errorUrl = new URL('/auth/error', request.url);
+    errorUrl.searchParams.set('error', 'missing_code');
+    errorUrl.searchParams.set('message', 'No authorization code received from OAuth provider. This may indicate the provider is not properly configured in Supabase.');
+    return NextResponse.redirect(errorUrl);
   }
 
   // Get Supabase client
@@ -41,14 +54,26 @@ export async function GET(request: NextRequest) {
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   // Exchange the code for a session
+  console.log('Exchanging code for session...');
   const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
   if (exchangeError) {
     console.error('Error exchanging code for session:', exchangeError);
     const errorUrl = new URL('/auth/error', request.url);
-    errorUrl.searchParams.set('error', exchangeError.message);
+    errorUrl.searchParams.set('error', 'exchange_failed');
+    errorUrl.searchParams.set('message', exchangeError.message || 'Failed to exchange authorization code for session');
     return NextResponse.redirect(errorUrl);
   }
+
+  if (!data.session) {
+    console.error('No session returned after code exchange');
+    const errorUrl = new URL('/auth/error', request.url);
+    errorUrl.searchParams.set('error', 'no_session');
+    errorUrl.searchParams.set('message', 'Authentication succeeded but no session was created. Please try again.');
+    return NextResponse.redirect(errorUrl);
+  }
+
+  console.log('Session created successfully for user:', data.user?.id);
 
   // Sync user to database
   if (data.user) {
