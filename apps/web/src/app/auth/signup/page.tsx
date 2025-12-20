@@ -41,68 +41,75 @@ export default function SignUpPage() {
     setError('');
     setSuccess('');
 
-    // Validate passwords match
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
-    }
-
-    // Validate password strength
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setLoading(false);
-      return;
-    }
-
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name: name || email.split('@')[0],
-          full_name: name || email.split('@')[0],
-        },
-      },
-    });
-
-    if (signUpError) {
-      setError(signUpError.message);
-      setLoading(false);
-      return;
-    }
-
-    // Sync user to database
-    if (data.user) {
-      try {
-        const syncResponse = await fetch('/api/auth/sync-user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: data.user.id,
-            email: data.user.email,
-            name: name || data.user.email?.split('@')[0] || 'User',
-            avatar: null,
-            phone: null,
-          }),
-        });
-        
-        if (!syncResponse.ok) {
-          console.error('Failed to sync user to database:', await syncResponse.text());
-        }
-      } catch (syncError) {
-        console.error('Error syncing user:', syncError);
-        // Don't block signup if sync fails
+    try {
+      // Validate passwords match
+      if (password !== confirmPassword) {
+        setError('Passwords do not match');
+        setLoading(false);
+        return;
       }
-    }
 
-    setSuccess('Account created successfully! Please check your email to verify your account.');
-    setLoading(false);
-    
-    // Redirect to login after 2 seconds
-    setTimeout(() => {
-      router.push('/auth/login');
-    }, 2000);
+      // Validate password strength
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters long');
+        setLoading(false);
+        return;
+      }
+
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name || email.split('@')[0],
+            full_name: name || email.split('@')[0],
+          },
+        },
+      });
+
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
+
+      // Sync user to database
+      if (data.user) {
+        try {
+          const syncResponse = await fetch('/api/auth/sync-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: data.user.id,
+              email: data.user.email,
+              name: name || data.user.email?.split('@')[0] || 'User',
+              avatar: null,
+              phone: null,
+            }),
+          });
+          
+          if (!syncResponse.ok) {
+            const errorText = await syncResponse.text();
+            console.error('Failed to sync user to database:', errorText);
+          }
+        } catch (syncError) {
+          console.error('Error syncing user:', syncError);
+          // Don't block signup if sync fails
+        }
+      }
+
+      setSuccess('Account created successfully! Please check your email to verify your account.');
+      setLoading(false);
+      
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 2000);
+    } catch (err) {
+      console.error('Signup error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred during signup');
+      setLoading(false);
+    }
   };
 
   const handleOAuthSignUp = async (provider: 'google' | 'github') => {
