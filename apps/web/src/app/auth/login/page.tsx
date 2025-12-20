@@ -92,17 +92,22 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     
-    const { error } = await supabase.auth.signInWithOAuth({
+    console.log(`Attempting ${provider} OAuth login...`);
+    
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
+    console.log('OAuth response:', { data, error });
+
     if (error) {
+      console.error('OAuth error:', error);
       // Handle provider not enabled error
-      if (error.message.includes('provider is not enabled')) {
-        setError(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login is not configured yet. Please use email/password or contact support.`);
+      if (error.message.includes('provider is not enabled') || error.message.includes('not configured')) {
+        setError(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login is not enabled yet. Please use email/password login or try Google instead.`);
       } else {
         setError(error.message);
       }

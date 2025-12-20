@@ -2,11 +2,33 @@
 
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 export default function AuthErrorPage() {
   const searchParams = useSearchParams();
   const error = searchParams?.get('error') || 'unknown_error';
   const message = searchParams?.get('message') || 'An authentication error occurred';
+
+  useEffect(() => {
+    console.error('Auth error page:', { error, message });
+  }, [error, message]);
+
+  // User-friendly error messages
+  const getErrorMessage = () => {
+    if (error.includes('provider') || message.includes('provider')) {
+      return 'OAuth provider not configured. Please contact support or try email/password login.';
+    }
+    if (error === 'access_denied') {
+      return 'You denied access to the application. Please try again if you want to sign in.';
+    }
+    if (error === 'missing_code') {
+      return 'Authentication failed. The authorization code was missing.';
+    }
+    if (error === 'server_error') {
+      return 'Server configuration error. Please contact support.';
+    }
+    return message || 'An unexpected authentication error occurred.';
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -31,13 +53,19 @@ export default function AuthErrorPage() {
           Authentication Error
         </h1>
         
-        <p className="text-gray-600 mb-2">
-          <span className="font-medium">Error:</span> {error}
+        <p className="text-gray-600 mb-4">
+          {getErrorMessage()}
         </p>
         
-        <p className="text-gray-500 mb-6">
-          {message}
-        </p>
+        <details className="text-left mb-6 p-3 bg-gray-50 rounded">
+          <summary className="cursor-pointer text-sm font-medium text-gray-700">
+            Technical Details
+          </summary>
+          <div className="mt-2 text-xs text-gray-600 space-y-1">
+            <p><span className="font-medium">Error Code:</span> {error}</p>
+            {message && <p><span className="font-medium">Message:</span> {message}</p>}
+          </div>
+        </details>
         
         <div className="space-y-3">
           <Link
