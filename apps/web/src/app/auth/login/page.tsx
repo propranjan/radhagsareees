@@ -65,6 +65,7 @@ export default function LoginPage() {
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
     setLoading(true);
+    setError('');
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -74,7 +75,12 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError(error.message);
+      // Handle provider not enabled error
+      if (error.message.includes('provider is not enabled')) {
+        setError(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login is not configured yet. Please use email/password or contact support.`);
+      } else {
+        setError(error.message);
+      }
       setLoading(false);
     }
   };

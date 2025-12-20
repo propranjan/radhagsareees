@@ -36,17 +36,25 @@ export async function GET(request: NextRequest) {
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   // Check if user is authenticated
-  const { data: { user }, error } = await supabase.auth.getUser();
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-  if (error || !user) {
-    // User not authenticated - redirect to login with return URL
-    const loginUrl = new URL('/auth/login', request.url);
-    loginUrl.searchParams.set('redirect_uri', redirect_uri);
-    loginUrl.searchParams.set('client_id', client_id);
-    if (state) loginUrl.searchParams.set('state', state);
-    if (scope) loginUrl.searchParams.set('scope', scope);
+    if (error || !user) {
+      // User not authenticated - redirect to login with return URL
+      const loginUrl = new URL('/auth/login', request.url);
+      loginUrl.searchParams.set('redirect_uri', redirect_uri);
+      loginUrl.searchParams.set('client_id', client_id);
+      if (state) loginUrl.searchParams.set('state', state);
+      if (scope) loginUrl.searchParams.set('scope', scope);
 
-    return NextResponse.redirect(loginUrl);
+      return NextResponse.redirect(loginUrl);
+    }
+  } catch (err) {
+    console.error('Error checking user auth:', err);
+    return NextResponse.json(
+      { error: 'server_error', error_description: 'Authentication check failed' },
+      { status: 500 }
+    );
   }
 
   // User is authenticated - show consent page or auto-approve
