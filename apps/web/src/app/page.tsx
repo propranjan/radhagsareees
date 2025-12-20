@@ -62,8 +62,8 @@ export default function HomePage() {
               <button className="p-2 text-gray-600 hover:text-primary-600 transition-colors">
                 <Search className="w-5 h-5" />
               </button>
-              <Link href="/account" className="p-2 text-gray-600 hover:text-primary-600 transition-colors">
-                <User className="w-5 h-5" />
+              <Link href="/auth/login" className="hidden md:block text-gray-700 hover:text-primary-600 transition-colors font-medium">
+                Sign In
               </Link>
               <Link href="/wishlist" className="p-2 text-gray-600 hover:text-primary-600 transition-colors">
                 <Heart className="w-5 h-5" />
