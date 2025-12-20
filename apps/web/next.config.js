@@ -54,7 +54,9 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              `script-src 'self' ${isDev ? "'unsafe-eval' 'unsafe-inline'" : ''} https://checkout.razorpay.com https://www.googletagmanager.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com`,
+              // Next.js relies on an inline bootstrap script in production; without allowing it,
+              // client-side navigation and hydration can break (pages may appear stuck).
+              `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ''} https://checkout.razorpay.com https://www.googletagmanager.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com`,
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://www.google-analytics.com",
               "font-src 'self' https://fonts.gstatic.com",
