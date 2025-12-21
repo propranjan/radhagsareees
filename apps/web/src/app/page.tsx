@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ShoppingBag, Heart, User, Search, Menu, Phone, Mail, MapPin } from 'lucide-react';
+import Header from '@/components/Header';
 
 // Force dynamic rendering to avoid prerender errors
 export const dynamic = 'force-dynamic';
@@ -8,79 +9,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          {/* Top Bar */}
-          <div className="hidden md:flex items-center justify-between py-2 text-sm text-gray-600 border-b">
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <Phone className="w-4 h-4" />
-                <span>+91 9876543210</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Mail className="w-4 h-4" />
-                <span>info@radhagsarees.com</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-4 h-4" />
-                <span>Mumbai, Maharashtra</span>
-              </div>
-            </div>
-            <div className="text-primary-600 font-medium">
-              Free Shipping on Orders Above ₹2999
-            </div>
-          </div>
-
-          {/* Main Header */}
-          <div className="flex items-center justify-between py-4">
-            {/* Logo */}
-            <Link href="/" className="text-2xl font-serif font-bold text-primary-600">
-              Radha G Sarees
-            </Link>
-
-            {/* Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="text-gray-700 hover:text-primary-600 transition-colors">
-                Home
-              </Link>
-              <Link href="/catalog" className="text-gray-700 hover:text-primary-600 transition-colors">
-                Catalog
-              </Link>
-              <Link href="/categories" className="text-gray-700 hover:text-primary-600 transition-colors">
-                Categories
-              </Link>
-              <Link href="/about" className="text-gray-700 hover:text-primary-600 transition-colors">
-                About
-              </Link>
-              <Link href="/contact" className="text-gray-700 hover:text-primary-600 transition-colors">
-                Contact
-              </Link>
-            </nav>
-
-            {/* Actions */}
-            <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-600 hover:text-primary-600 transition-colors">
-                <Search className="w-5 h-5" />
-              </button>
-              <Link href="/auth/login" className="hidden md:block text-gray-700 hover:text-primary-600 transition-colors font-medium">
-                Sign In
-              </Link>
-              <Link href="/wishlist" className="p-2 text-gray-600 hover:text-primary-600 transition-colors">
-                <Heart className="w-5 h-5" />
-              </Link>
-              <Link href="/cart" className="p-2 text-gray-600 hover:text-primary-600 transition-colors relative">
-                <ShoppingBag className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  2
-                </span>
-              </Link>
-              <button className="md:hidden p-2 text-gray-600 hover:text-primary-600 transition-colors">
-                <Menu className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-primary-50 to-secondary-50 py-20">
