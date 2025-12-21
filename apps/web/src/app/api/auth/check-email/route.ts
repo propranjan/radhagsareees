@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@radhagsareees/db';
 
+// Force dynamic rendering - this route uses searchParams
+export const dynamic = 'force-dynamic';
+
 /**
  * Check Email API
  * Checks if an email address is already registered
