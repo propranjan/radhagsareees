@@ -37,17 +37,19 @@ model User {
 }
 
 model Address {
-  id        String  @id @default(cuid())
+  id        String      @id @default(cuid())
   userId    String
   name      String
+  type      AddressType @default(HOME)
   street    String
   city      String
   state     String
   zipCode   String
-  country   String  @default("India")
-  isDefault Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  country   String      @default("India")
+  phone     String?
+  isDefault Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
   // Relations
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -355,4 +357,9 @@ enum ReviewStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum AddressType {
+  HOME
+  OFFICE
 }

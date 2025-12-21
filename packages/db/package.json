@@ -19,10 +19,10 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@prisma/client": "^5.6.0",
+    "@prisma/client": "5.22.0",
     "@supabase/supabase-js": "^2.38.0",
-    "bcryptjs": "^2.4.3",
-    "@types/node": "^20.8.9"
+    "@types/node": "^20.8.9",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
     "@radhagsareees/config": "workspace:*",
