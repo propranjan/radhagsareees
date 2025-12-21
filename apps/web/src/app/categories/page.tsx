@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Package, ArrowRight } from 'lucide-react';
+import Header from '@/components/Header';
 
 interface Category {
   id: string;
   name: string;
   slug: string;
   description: string | null;
+  image: string | null;
   productCount: number;
 }
 
@@ -37,15 +40,19 @@ export default function CategoriesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      <Header />
+      {/* Page Header */}
       <div className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-12">
           <h1 className="text-4xl font-serif font-bold text-gray-900 text-center">
@@ -73,8 +80,19 @@ export default function CategoriesPage() {
                 href={`/catalog?category=${category.slug}`}
                 className="group bg-white rounded-lg shadow-sm hover:shadow-lg transition-shadow overflow-hidden"
               >
-                <div className="aspect-video bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center">
-                  <Package className="w-16 h-16 text-primary-600 group-hover:scale-110 transition-transform" />
+                <div className="aspect-video bg-gradient-to-br from-primary-100 to-primary-50 relative overflow-hidden">
+                  {category.image ? (
+                    <Image
+                      src={category.image}
+                      alt={category.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package className="w-16 h-16 text-primary-600 group-hover:scale-110 transition-transform" />
+                    </div>
+                  )}
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">

@@ -4,20 +4,26 @@ import { prisma } from '@radhagsareees/db';
 export async function GET() {
   try {
     const categories = await prisma.category.findMany({
+      where: {
+        isActive: true,
+      },
       select: {
         id: true,
         name: true,
         slug: true,
         description: true,
+        image: true,
+        sortOrder: true,
         _count: {
           select: {
             products: true,
           },
         },
       },
-      orderBy: {
-        name: 'asc',
-      },
+      orderBy: [
+        { sortOrder: 'asc' },
+        { name: 'asc' },
+      ],
     });
 
     return NextResponse.json({
@@ -26,6 +32,7 @@ export async function GET() {
         name: cat.name,
         slug: cat.slug,
         description: cat.description,
+        image: cat.image,
         productCount: cat._count.products,
       })),
     });

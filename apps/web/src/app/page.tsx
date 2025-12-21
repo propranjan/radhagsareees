@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ShoppingBag, Heart, User, Search, Menu, Phone, Mail, MapPin } from 'lucide-react';
 import Header from '@/components/Header';
+import FeaturedCategories from '@/components/FeaturedCategories';
 
 // Force dynamic rendering to avoid prerender errors
 export const dynamic = 'force-dynamic';
@@ -74,44 +75,7 @@ export default function HomePage() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                name: 'Silk Sarees',
-                image: 'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=300&h=400&fit=crop',
-                href: '/catalog?category=silk-sarees'
-              },
-              {
-                name: 'Cotton Sarees', 
-                image: 'https://images.unsplash.com/photo-1594736797933-d0401ba0ad84?w=300&h=400&fit=crop',
-                href: '/catalog?category=cotton-sarees'
-              },
-              {
-                name: 'Designer Sarees',
-                image: 'https://images.unsplash.com/photo-1605194125977-7976b2222708?w=300&h=400&fit=crop',
-                href: '/catalog?category=designer-sarees'
-              },
-              {
-                name: 'Wedding Sarees',
-                image: 'https://images.unsplash.com/photo-1623177341583-0dc44942822c?w=300&h=400&fit=crop',
-                href: '/catalog?category=wedding-sarees'
-              }
-            ].map((category) => (
-              <Link key={category.name} href={category.href} className="group">
-                <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100">
-                  <img 
-                    src={category.image}
-                    alt={category.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
-                  <div className="absolute bottom-4 left-4 text-white">
-                    <h3 className="text-lg font-semibold">{category.name}</h3>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <FeaturedCategories />
         </div>
       </section>
 
