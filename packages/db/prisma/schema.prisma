@@ -139,20 +139,39 @@ model Variant {
   @@map("variants")
 }
 
+model InventoryLocation {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  city      String
+  address   String
+  phone     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  inventory Inventory[]
+
+  @@map("inventory_locations")
+}
+
 model Inventory {
   id                String  @id @default(cuid())
   variantId         String  @unique
   qtyAvailable      Int     @default(0)
   lowStockThreshold Int     @default(5)
   reservedQty       Int     @default(0) // Quantity reserved for pending orders
+  locationId        String? // Optional location reference
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   // Relations
-  variant Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variant  Variant            @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  location InventoryLocation? @relation(fields: [locationId], references: [id])
 
   @@index([variantId])
   @@index([qtyAvailable])
+  @@index([locationId])
   @@map("inventory")
 }
 

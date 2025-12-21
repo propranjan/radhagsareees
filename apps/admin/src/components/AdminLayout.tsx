@@ -18,6 +18,7 @@ import {
   Tags,
   FolderTree,
   MessageSquare,
+  MapPin,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -31,6 +32,7 @@ const navItems = [
   { name: 'Categories', href: '/categories', icon: FolderTree },
   { name: 'Variants', href: '/variants', icon: Tags },
   { name: 'Inventory', href: '/inventory', icon: Boxes },
+  { name: 'Locations', href: '/locations', icon: MapPin },
   { name: 'Orders', href: '/orders', icon: ShoppingCart },
   { name: 'Payments', href: '/payments', icon: CreditCard },
   { name: 'Reviews', href: '/reviews', icon: MessageSquare },

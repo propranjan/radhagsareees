@@ -47,6 +47,9 @@ export async function GET(request: NextRequest) {
             },
           },
         },
+        location: {
+          select: { id: true, name: true, city: true },
+        },
       },
       orderBy: { qtyAvailable: 'asc' },
     });
@@ -83,6 +86,11 @@ export async function GET(request: NextRequest) {
         size: item.variant.size,
         price: item.variant.price,
       },
+      location: item.location ? {
+        id: item.location.id,
+        name: item.location.name,
+        city: item.location.city,
+      } : null,
       updatedAt: item.updatedAt.toISOString(),
     }));
 
@@ -130,7 +138,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { inventoryId, qtyAvailable, lowStockThreshold } = body;
+    const { inventoryId, qtyAvailable, lowStockThreshold, locationId } = body;
 
     if (!inventoryId) {
       return NextResponse.json(
@@ -158,6 +166,9 @@ export async function PATCH(request: NextRequest) {
         );
       }
       updateData.lowStockThreshold = lowStockThreshold;
+    }
+    if (locationId !== undefined) {
+      updateData.locationId = locationId || null;
     }
 
     if (Object.keys(updateData).length === 0) {
