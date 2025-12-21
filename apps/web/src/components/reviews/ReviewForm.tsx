@@ -17,7 +17,7 @@ interface ReviewFormProps {
 interface ReviewFormData {
   rating: number;
   title: string;
-  body: string;
+  comment: string;
   photos: File[];
 }
 
@@ -25,7 +25,7 @@ export function ReviewForm({ productId, userToken, onSubmit, onCancel, isSubmitt
   const [formData, setFormData] = useState<ReviewFormData>({
     rating: 5,
     title: '',
-    body: '',
+    comment: '',
     photos: [],
   });
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +60,7 @@ export function ReviewForm({ productId, userToken, onSubmit, onCancel, isSubmitt
       return;
     }
 
-    if (!formData.title.trim() || !formData.body.trim()) {
+    if (!formData.title.trim() || !formData.comment.trim()) {
       setError('Please fill in all required fields');
       return;
     }
@@ -132,15 +132,15 @@ export function ReviewForm({ productId, userToken, onSubmit, onCancel, isSubmitt
             Review Details *
           </label>
           <textarea
-            value={formData.body}
-            onChange={(e) => setFormData(prev => ({ ...prev, body: e.target.value }))}
+            value={formData.comment}
+            onChange={(e) => setFormData(prev => ({ ...prev, comment: e.target.value }))}
             placeholder="Share your thoughts about this product..."
             rows={4}
             maxLength={2000}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
           <div className="text-right text-xs text-gray-500 mt-1">
-            {formData.body.length}/2000
+            {formData.comment.length}/2000
           </div>
         </div>
 
@@ -174,7 +174,7 @@ export function ReviewForm({ productId, userToken, onSubmit, onCancel, isSubmitt
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={isSubmitting || !formData.title.trim() || !formData.body.trim()}
+            disabled={isSubmitting || !formData.title.trim() || !formData.comment.trim()}
             className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >
             {isSubmitting ? (

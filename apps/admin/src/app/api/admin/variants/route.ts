@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         { color: { contains: search, mode: 'insensitive' } },
         { size: { contains: search, mode: 'insensitive' } },
         { sku: { contains: search, mode: 'insensitive' } },
-        { product: { name: { contains: search, mode: 'insensitive' } } },
+        { product: { title: { contains: search, mode: 'insensitive' } } },
       ];
     }
 
@@ -48,11 +48,11 @@ export async function GET(request: NextRequest) {
       prisma.variant.findMany({
         where,
         include: {
-          product: { select: { id: true, name: true, slug: true } },
-          inventory: { select: { quantity: true } },
+          product: { select: { id: true, title: true, slug: true } },
+          inventory: { select: { qtyAvailable: true } },
         },
         orderBy: [
-          { product: { name: 'asc' } },
+          { product: { title: 'asc' } },
           { color: 'asc' },
           { size: 'asc' },
         ],
@@ -64,22 +64,22 @@ export async function GET(request: NextRequest) {
 
     // Get products for dropdown
     const products = await prisma.product.findMany({
-      select: { id: true, name: true },
-      orderBy: { name: 'asc' },
+      select: { id: true, title: true },
+      orderBy: { title: 'asc' },
     });
 
     // Transform data
     const transformedVariants = variants.map((variant) => ({
       id: variant.id,
       productId: variant.productId,
-      productName: variant.product.name,
+      productName: variant.product.title,
       productSlug: variant.product.slug,
       sku: variant.sku,
       color: variant.color,
       size: variant.size,
-      price: variant.price,
-      mrp: variant.mrp,
-      stock: variant.inventory?.quantity || 0,
+      price: Number(variant.price),
+      mrp: Number(variant.mrp),
+      stock: variant.inventory?.qtyAvailable || 0,
       createdAt: variant.createdAt.toISOString(),
     }));
 
@@ -154,7 +154,7 @@ export async function PATCH(request: NextRequest) {
       where: { id: variantId },
       data: updateData,
       include: {
-        product: { select: { name: true } },
+        product: { select: { title: true } },
       },
     });
 
@@ -162,12 +162,12 @@ export async function PATCH(request: NextRequest) {
       success: true,
       variant: {
         id: variant.id,
-        productName: variant.product.name,
+        productName: variant.product.title,
         sku: variant.sku,
         color: variant.color,
         size: variant.size,
-        price: variant.price,
-        mrp: variant.mrp,
+        price: Number(variant.price),
+        mrp: Number(variant.mrp),
       },
     });
   } catch (error) {
@@ -236,13 +236,13 @@ export async function POST(request: NextRequest) {
         mrp,
         inventory: {
           create: {
-            quantity: stock || 0,
+            qtyAvailable: stock || 0,
           },
         },
       },
       include: {
-        product: { select: { name: true } },
-        inventory: { select: { quantity: true } },
+        product: { select: { title: true } },
+        inventory: { select: { qtyAvailable: true } },
       },
     });
 
@@ -250,13 +250,13 @@ export async function POST(request: NextRequest) {
       success: true,
       variant: {
         id: variant.id,
-        productName: variant.product.name,
+        productName: variant.product.title,
         sku: variant.sku,
         color: variant.color,
         size: variant.size,
-        price: variant.price,
-        mrp: variant.mrp,
-        stock: variant.inventory?.quantity || 0,
+        price: Number(variant.price),
+        mrp: Number(variant.mrp),
+        stock: variant.inventory?.qtyAvailable || 0,
       },
     });
   } catch (error) {

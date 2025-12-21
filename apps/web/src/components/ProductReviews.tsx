@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useCallback, useOptimistic } from 'react';
+import React, { useState, useCallback, useOptimistic, useEffect } from 'react';
 import { Star, Camera, Send, CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import { type ReviewResponse } from '../../../lib/review-validations';
+import { type ReviewResponse } from '@/lib/review-validations';
 
 interface ProductReviewsProps {
   productId: string;
@@ -12,7 +12,26 @@ interface ProductReviewsProps {
   userToken?: string;
 }
 
-interface OptimisticReview extends ReviewResponse {
+// OptimisticReview type with all required fields including those from ReviewResponse
+interface OptimisticReview {
+  id: string;
+  productId: string;
+  userId: string;
+  rating: number;
+  title: string;
+  comment: string;
+  imageUrls: string[];
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  isVerified: boolean;
+  helpfulCount: number;
+  reportCount: number;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    name: string;
+    email?: string;
+  };
   isOptimistic?: boolean;
   submissionStatus?: 'submitting' | 'success' | 'error';
   errorMessage?: string;
@@ -21,8 +40,8 @@ interface OptimisticReview extends ReviewResponse {
 interface ReviewFormData {
   rating: number;
   title: string;
-  body: string;
-  photos: File[];
+  comment: string;
+  photos: File[]; // Files for upload, sent as imageUrls after upload
 }
 
 export function ProductReviews({
@@ -32,25 +51,61 @@ export function ProductReviews({
   initialRatingDistribution,
   userToken,
 }: ProductReviewsProps) {
-  const [reviews, setReviews] = useState<ReviewResponse[]>(initialReviews);
+  const [reviews, setReviews] = useState<OptimisticReview[]>(initialReviews as OptimisticReview[]);
   const [averageRating, setAverageRating] = useState(initialAverageRating);
   const [ratingDistribution, setRatingDistribution] = useState(initialRatingDistribution);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [isLoading, setIsLoading] = useState(initialReviews.length === 0);
+
+  // Fetch reviews on mount if not provided
+  useEffect(() => {
+    if (initialReviews.length === 0) {
+      fetchReviews();
+    }
+  }, [productId]);
+
+  const fetchReviews = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/reviews?productId=${productId}&status=APPROVED`);
+      const data = await response.json();
+      
+      if (data.success && data.reviews) {
+        setReviews(data.reviews as OptimisticReview[]);
+        
+        // Calculate average rating and distribution
+        if (data.reviews.length > 0) {
+          const totalRating = data.reviews.reduce((sum: number, r: OptimisticReview) => sum + r.rating, 0);
+          setAverageRating(Math.round((totalRating / data.reviews.length) * 10) / 10);
+          
+          const distribution: Record<number, number> = {};
+          data.reviews.forEach((r: OptimisticReview) => {
+            distribution[r.rating] = (distribution[r.rating] || 0) + 1;
+          });
+          setRatingDistribution(distribution);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch reviews:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Form state
   const [formData, setFormData] = useState<ReviewFormData>({
     rating: 5,
     title: '',
-    body: '',
+    comment: '',
     photos: [],
   });
 
   // Optimistic updates
   const [optimisticReviews, addOptimisticReview] = useOptimistic(
     reviews,
-    (state: ReviewResponse[], newReview: OptimisticReview) => [newReview, ...state]
+    (state: OptimisticReview[], newReview: OptimisticReview) => [newReview, ...state]
   );
 
   const handleRatingClick = (rating: number) => {
@@ -82,7 +137,7 @@ export function ProductReviews({
       return;
     }
 
-    if (!formData.title.trim() || !formData.body.trim()) {
+    if (!formData.title.trim() || !formData.comment.trim()) {
       setSubmitMessage({ type: 'error', text: 'Please fill in all required fields' });
       return;
     }
@@ -97,8 +152,8 @@ export function ProductReviews({
       userId: 'current-user',
       rating: formData.rating,
       title: formData.title,
-      body: formData.body,
-      photos: [], // Will be populated after upload
+      comment: formData.comment,
+      imageUrls: [], // Will be populated after upload
       status: 'PENDING',
       isVerified: false,
       helpfulCount: 0,
@@ -134,8 +189,8 @@ export function ProductReviews({
           productId,
           rating: formData.rating,
           title: formData.title,
-          body: formData.body,
-          photos: photoUrls,
+          comment: formData.comment,
+          imageUrls: photoUrls,
         }),
       });
 
@@ -155,7 +210,7 @@ export function ProductReviews({
         setRatingDistribution(newDistribution);
 
         // Reset form
-        setFormData({ rating: 5, title: '', body: '', photos: [] });
+        setFormData({ rating: 5, title: '', comment: '', photos: [] });
         setShowForm(false);
         setSubmitMessage({ 
           type: 'success', 
@@ -223,6 +278,16 @@ export function ProductReviews({
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      {/* Loading State */}
+      {isLoading && (
+        <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading reviews...</p>
+        </div>
+      )}
+
+      {!isLoading && (
+        <>
       {/* Review Summary */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -319,15 +384,15 @@ export function ProductReviews({
                   Review Details *
                 </label>
                 <textarea
-                  value={formData.body}
-                  onChange={(e) => setFormData(prev => ({ ...prev, body: e.target.value }))}
+                  value={formData.comment}
+                  onChange={(e) => setFormData(prev => ({ ...prev, comment: e.target.value }))}
                   placeholder="Share your thoughts about this product..."
                   rows={4}
                   maxLength={2000}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
                 <div className="text-right text-xs text-gray-500 mt-1">
-                  {formData.body.length}/2000
+                  {formData.comment.length}/2000
                 </div>
               </div>
 
@@ -361,7 +426,7 @@ export function ProductReviews({
                 <button
                   type="button"
                   onClick={submitReview}
-                  disabled={isSubmitting || !formData.title.trim() || !formData.body.trim()}
+                  disabled={isSubmitting || !formData.title.trim() || !formData.comment.trim()}
                   className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                 >
                   {isSubmitting ? (
@@ -428,11 +493,11 @@ export function ProductReviews({
             </div>
 
             <h4 className="font-semibold text-gray-900 mb-2">{review.title}</h4>
-            <p className="text-gray-700 mb-3 leading-relaxed">{review.body}</p>
+            <p className="text-gray-700 mb-3 leading-relaxed">{review.comment}</p>
 
-            {review.photos && review.photos.length > 0 && (
+            {review.imageUrls && review.imageUrls.length > 0 && (
               <div className="flex gap-2 mb-3">
-                {review.photos.map((photo, index) => (
+                {review.imageUrls.map((photo: string, index: number) => (
                   <img
                     key={index}
                     src={photo}
@@ -469,6 +534,8 @@ export function ProductReviews({
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

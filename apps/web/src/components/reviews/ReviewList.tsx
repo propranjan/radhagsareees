@@ -104,11 +104,11 @@ function ReviewItem({ review, isOptimistic = false }: ReviewItemProps) {
       </div>
 
       <h4 className="font-semibold text-gray-900 mb-2">{review.title}</h4>
-      <p className="text-gray-700 mb-3 leading-relaxed">{review.body}</p>
+      <p className="text-gray-700 mb-3 leading-relaxed">{review.comment}</p>
 
-      {review.photos && review.photos.length > 0 && (
+      {review.imageUrls && review.imageUrls.length > 0 && (
         <div className="flex gap-2 mb-3">
-          {review.photos.map((photo, index) => (
+          {review.imageUrls.map((photo: string, index: number) => (
             <img
               key={index}
               src={photo}

@@ -9,6 +9,19 @@ import { TryOnModal } from "../../../components/TryOnModal";
 import { ProductReviews } from "../../../components/ProductReviews";
 import { ClientTryOnButton } from "../../../components/feature-flags/TryOnButton";
 import { analytics } from "../../../lib/analytics";
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client
+const getSupabaseClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return null;
+  }
+  
+  return createClient(supabaseUrl, supabaseAnonKey);
+};
 
 interface Variant {
   id: string;
@@ -59,6 +72,21 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [quantity, setQuantity] = useState(1);
   const [isTryOnModalOpen, setIsTryOnModalOpen] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [userToken, setUserToken] = useState<string | undefined>(undefined);
+
+  // Get user session for reviews
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = getSupabaseClient();
+      if (!supabase) return;
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        setUserToken(session.access_token);
+      }
+    };
+    checkAuth();
+  }, []);
 
   useEffect(() => {
     fetchProduct();
@@ -519,6 +547,7 @@ export default function ProductPage({ params }: ProductPageProps) {
             initialReviews={[]}
             initialAverageRating={0}
             initialRatingDistribution={{}}
+            userToken={userToken}
           />
         </div>
       </div>

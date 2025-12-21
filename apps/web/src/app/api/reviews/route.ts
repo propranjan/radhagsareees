@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     // Validate query parameters
     const validation = validateReviewQuery(queryParams);
-    if (!validation.success) {
+    if (!validation.success || !validation.data) {
       return NextResponse.json(
         {
           error: 'Invalid query parameters',
@@ -135,8 +135,8 @@ export async function GET(request: NextRequest) {
         userId: review.userId,
         rating: review.rating,
         title: review.title,
-        body: review.body,
-        photos: review.photos,
+        comment: review.comment,
+        imageUrls: review.imageUrls,
         status: review.status as 'PENDING' | 'APPROVED' | 'REJECTED',
         isVerified: review.isVerified,
         helpfulCount: review.helpfulCount,
@@ -236,7 +236,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const reviewData: ReviewSubmission = validation.data;
+    const reviewData = validation.data!;
 
     // 4. Verify product exists and user hasn't already reviewed it
     const [product, existingReview] = await Promise.all([
@@ -279,10 +279,10 @@ export async function POST(request: NextRequest) {
 
     // 5. Perform basic content moderation
     const titleModeration = performBasicContentModeration(reviewData.title);
-    const bodyModeration = performBasicContentModeration(reviewData.body);
+    const commentModeration = performBasicContentModeration(reviewData.comment);
     
-    const totalScore = (titleModeration.score + bodyModeration.score) / 2;
-    const allFlags = [...titleModeration.flags, ...bodyModeration.flags];
+    const totalScore = (titleModeration.score + commentModeration.score) / 2;
+    const allFlags = [...titleModeration.flags, ...commentModeration.flags];
 
     // Auto-reject if moderation score is too high
     let initialStatus: 'PENDING' | 'REJECTED' = 'PENDING';
@@ -290,17 +290,29 @@ export async function POST(request: NextRequest) {
       initialStatus = 'REJECTED';
     }
 
-    // 6. Check if user has verified purchase (optional enhancement)
+    // 6. Check if user has verified purchase - REQUIRED for review submission
     const verifiedPurchase = await prisma.orderItem.findFirst({
       where: {
         productId: reviewData.productId,
         order: {
           userId: user.id,
-          status: 'CONFIRMED'
+          status: 'DELIVERED'
         }
       },
       select: { id: true }
     });
+
+    // Require verified purchase to submit a review
+    if (!verifiedPurchase) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Purchase required',
+          message: 'You can only review products you have purchased and received'
+        },
+        { status: 403 }
+      );
+    }
 
     // 7. Create review in database
     const review = await prisma.review.create({
@@ -309,10 +321,12 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         rating: reviewData.rating,
         title: reviewData.title,
-        body: reviewData.body,
-        photos: reviewData.photos || [],
+        comment: reviewData.comment,
+        imageUrls: reviewData.imageUrls || [],
         status: initialStatus,
         isVerified: !!verifiedPurchase,
+        riskScore: totalScore,
+        moderationFlags: allFlags,
       },
       include: {
         user: {
@@ -354,9 +368,9 @@ export async function POST(request: NextRequest) {
         userId: review.userId,
         rating: review.rating,
         title: review.title,
-        body: review.body,
-        photos: review.photos,
-        status: review.status,
+        comment: review.comment,
+        imageUrls: review.imageUrls,
+        status: review.status as 'PENDING' | 'APPROVED' | 'REJECTED',
         isVerified: review.isVerified,
         helpfulCount: review.helpfulCount,
         reportCount: review.reportCount,
@@ -365,7 +379,7 @@ export async function POST(request: NextRequest) {
         user: {
           id: review.user.id,
           name: review.user.name || 'Anonymous User',
-          email: user.role === 'ADMIN' ? review.user.email : undefined
+          email: user.role === 'ADMIN' ? review.user.email || undefined : undefined
         }
       },
       message: initialStatus === 'PENDING' 

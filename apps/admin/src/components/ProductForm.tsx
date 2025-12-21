@@ -61,7 +61,7 @@ export default function ProductForm({ productId, initialData }: ProductFormProps
     },
   });
 
-  const { fields: variantFields, append: addVariant, remove: removeVariant } = useFieldArray<ProductCreationData, 'variants'>({
+  const { fields: variantFields, append: addVariant, remove: removeVariant, replace: replaceVariants } = useFieldArray<ProductCreationData, 'variants'>({
     control,
     name: 'variants',
   });
@@ -108,30 +108,41 @@ export default function ProductForm({ productId, initialData }: ProductFormProps
     try {
       setLoading(true);
       const response = await fetch(`/api/admin/products/${productId}`);
+      
+      if (!response.ok) {
+        console.error('Failed to fetch product: HTTP', response.status);
+        return;
+      }
+      
       const product = await response.json();
+      
+      if (!product || product.error) {
+        console.error('Product not found or error:', product?.error);
+        return;
+      }
       
       // Transform the data to match form structure
       const formData: ProductCreationData = {
         product: {
-          title: product.title,
-          slug: product.slug,
-          description: product.description,
-          care: product.care,
-          images: product.images,
-          categoryId: product.categoryId,
-          isActive: product.isActive,
-          isNew: product.isNew,
-          isFeatured: product.isFeatured,
+          title: product.title || '',
+          slug: product.slug || '',
+          description: product.description || '',
+          care: product.care || '',
+          images: product.images || [''],
+          categoryId: product.categoryId || '',
+          isActive: product.isActive ?? true,
+          isNew: product.isNew ?? false,
+          isFeatured: product.isFeatured ?? false,
         },
-        variants: product.variants.map((variant: any) => ({
-          sku: variant.sku,
-          color: variant.color,
-          size: variant.size,
-          mrp: variant.mrp,
-          price: variant.price,
+        variants: (product.variants || []).map((variant: any) => ({
+          sku: variant.sku || '',
+          color: variant.color || '',
+          size: variant.size || 'Free Size',
+          mrp: Number(variant.mrp) || 0,
+          price: Number(variant.price) || 0,
           inventory: {
-            qtyAvailable: variant.inventory.qtyAvailable,
-            lowStockThreshold: variant.inventory.lowStockThreshold,
+            qtyAvailable: variant.inventory?.qtyAvailable || 0,
+            lowStockThreshold: variant.inventory?.lowStockThreshold || 5,
           },
         })),
       };
@@ -141,13 +152,10 @@ export default function ProductForm({ productId, initialData }: ProductFormProps
         setValue(`product.${key as keyof typeof formData.product}`, value);
       });
       
-      // Clear existing variants and set new ones
-      while (variantFields.length > 0) {
-        removeVariant(0);
+      // Replace all variants at once (more efficient than removing one by one)
+      if (formData.variants.length > 0) {
+        replaceVariants(formData.variants);
       }
-      formData.variants.forEach((variant) => {
-        addVariant(variant);
-      });
       
     } catch (error) {
       console.error('Failed to fetch product:', error);

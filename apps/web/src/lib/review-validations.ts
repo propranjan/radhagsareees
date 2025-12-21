@@ -10,11 +10,11 @@ export const reviewSubmissionSchema = z.object({
   title: z.string()
     .min(1, 'Review title is required')
     .max(100, 'Review title must be 100 characters or less'),
-  body: z.string()
-    .min(10, 'Review body must be at least 10 characters')
-    .max(2000, 'Review body must be 2000 characters or less'),
-  photos: z.array(z.string().url('Invalid photo URL'))
-    .max(3, 'Maximum 3 photos allowed')
+  comment: z.string()
+    .min(10, 'Review comment must be at least 10 characters')
+    .max(2000, 'Review comment must be 2000 characters or less'),
+  imageUrls: z.array(z.string().url('Invalid image URL'))
+    .max(3, 'Maximum 3 images allowed')
     .optional()
     .default([]),
 });
@@ -80,8 +80,8 @@ export type ReviewResponse = {
   userId: string;
   rating: number;
   title: string;
-  body: string;
-  photos: string[];
+  comment: string;
+  imageUrls: string[];
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   isVerified: boolean;
   helpfulCount: number;

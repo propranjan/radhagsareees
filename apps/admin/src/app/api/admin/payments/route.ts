@@ -76,10 +76,10 @@ export async function GET(request: NextRequest) {
       orderNumber: payment.order.orderNumber,
       customerName: payment.order.user.name || payment.order.user.email.split('@')[0],
       customerEmail: payment.order.user.email,
-      amount: payment.amount,
+      amount: Number(payment.amount),
       method: payment.method,
       status: payment.status,
-      transactionId: payment.transactionId,
+      transactionId: payment.gatewayId,
       createdAt: payment.createdAt.toISOString(),
       updatedAt: payment.updatedAt.toISOString(),
     }));
@@ -147,7 +147,7 @@ export async function PATCH(request: NextRequest) {
     // Update payment
     const updateData: any = { status };
     if (transactionId) {
-      updateData.transactionId = transactionId;
+      updateData.gatewayId = transactionId;
     }
 
     const payment = await prisma.payment.update({
@@ -164,7 +164,7 @@ export async function PATCH(request: NextRequest) {
         id: payment.id,
         orderNumber: payment.order.orderNumber,
         status: payment.status,
-        transactionId: payment.transactionId,
+        transactionId: payment.gatewayId,
       },
     });
   } catch (error) {

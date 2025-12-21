@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Tags,
+  FolderTree,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -26,6 +27,7 @@ interface AdminLayoutProps {
 const navItems = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Products', href: '/products', icon: Package },
+  { name: 'Categories', href: '/categories', icon: FolderTree },
   { name: 'Variants', href: '/variants', icon: Tags },
   { name: 'Inventory', href: '/inventory', icon: Boxes },
   { name: 'Orders', href: '/orders', icon: ShoppingCart },
