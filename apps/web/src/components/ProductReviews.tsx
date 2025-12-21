@@ -57,45 +57,46 @@ export function ProductReviews({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
-  const [isLoading, setIsLoading] = useState(initialReviews.length === 0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch reviews on mount if not provided
+  // Fetch reviews on mount
   useEffect(() => {
-    if (initialReviews.length === 0) {
-      fetchReviews();
-    }
-  }, [productId]);
-
-  const fetchReviews = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/reviews?productId=${productId}&status=APPROVED`);
-      const data = await response.json();
-      
-      // Handle both success: true format and direct reviews array
-      const reviewsData = data.success ? data.reviews : (data.reviews || []);
-      
-      if (reviewsData && reviewsData.length >= 0) {
-        setReviews(reviewsData as OptimisticReview[]);
+    const fetchReviews = async () => {
+      try {
+        setIsLoading(true);
+        console.log('Fetching reviews for productId:', productId);
+        const response = await fetch(`/api/reviews?productId=${productId}&status=APPROVED`);
+        const data = await response.json();
+        console.log('Reviews API response:', data);
         
-        // Calculate average rating and distribution
-        if (reviewsData.length > 0) {
-          const totalRating = reviewsData.reduce((sum: number, r: OptimisticReview) => sum + r.rating, 0);
-          setAverageRating(Math.round((totalRating / reviewsData.length) * 10) / 10);
+        // Handle both success: true format and direct reviews array
+        const reviewsData = data.success ? data.reviews : (data.reviews || []);
+        console.log('Parsed reviews data:', reviewsData);
+        
+        if (reviewsData && reviewsData.length >= 0) {
+          setReviews(reviewsData as OptimisticReview[]);
           
-          const distribution: Record<number, number> = {};
-          reviewsData.forEach((r: OptimisticReview) => {
-            distribution[r.rating] = (distribution[r.rating] || 0) + 1;
-          });
-          setRatingDistribution(distribution);
+          // Calculate average rating and distribution
+          if (reviewsData.length > 0) {
+            const totalRating = reviewsData.reduce((sum: number, r: OptimisticReview) => sum + r.rating, 0);
+            setAverageRating(Math.round((totalRating / reviewsData.length) * 10) / 10);
+            
+            const distribution: Record<number, number> = {};
+            reviewsData.forEach((r: OptimisticReview) => {
+              distribution[r.rating] = (distribution[r.rating] || 0) + 1;
+            });
+            setRatingDistribution(distribution);
+          }
         }
+      } catch (error) {
+        console.error('Failed to fetch reviews:', error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to fetch reviews:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+    
+    fetchReviews();
+  }, [productId]);
 
   // Form state
   const [formData, setFormData] = useState<ReviewFormData>({
@@ -280,7 +281,7 @@ export function ProductReviews({
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6" suppressHydrationWarning>
       {/* Loading State */}
       {isLoading && (
         <div className="bg-white rounded-lg shadow-sm p-8 text-center">

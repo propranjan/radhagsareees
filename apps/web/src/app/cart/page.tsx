@@ -209,7 +209,7 @@ export default function CartPage() {
                       <div className="flex justify-between">
                         <div>
                           <Link
-                            href={`/products/${item.product.slug}`}
+                            href={`/product/${item.product.slug}`}
                             className="font-semibold text-gray-900 hover:text-primary-600"
                           >
                             {item.product.title}

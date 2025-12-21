@@ -301,7 +301,7 @@ export default function OrderDetailPage({ params }: { params: { orderId: string 
               <div key={item.id} className="py-4 first:pt-0 last:pb-0">
                 <div className="flex gap-4">
                   <Link
-                    href={`/products/${item.product.slug}`}
+                    href={`/product/${item.product.slug}`}
                     className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden hover:opacity-80 transition-opacity"
                   >
                     {item.product.images?.[0] ? (
@@ -320,7 +320,7 @@ export default function OrderDetailPage({ params }: { params: { orderId: string 
                   </Link>
                   <div className="flex-1 min-w-0">
                     <Link
-                      href={`/products/${item.product.slug}`}
+                      href={`/product/${item.product.slug}`}
                       className="font-medium text-gray-900 hover:text-primary-600 line-clamp-1"
                     >
                       {item.product.title}

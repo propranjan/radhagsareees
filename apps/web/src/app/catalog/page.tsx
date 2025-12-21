@@ -3,7 +3,7 @@
 import { ProductCard } from '@radhagsareees/ui';
 import Link from 'next/link';
 import { Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/useCart';
 import Header from '@/components/Header';
@@ -11,7 +11,7 @@ import Header from '@/components/Header';
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
-export default function CatalogPage() {
+function CatalogContent() {
   const router = useRouter();
   const { addToCart, adding } = useCart();
   const [products, setProducts] = useState<any[]>([]);
@@ -174,7 +174,7 @@ export default function CatalogPage() {
                 <div key={product.id} onClick={(e) => {
                   // Only navigate if not clicking on buttons
                   if (!(e.target as HTMLElement).closest('button')) {
-                    router.push(`/products/${product.slug}`);
+                    router.push(`/product/${product.slug}`);
                   }
                 }} className="cursor-pointer">
                   <ProductCard 
@@ -197,5 +197,20 @@ export default function CatalogPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CatalogPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        </div>
+      </div>
+    }>
+      <CatalogContent />
+    </Suspense>
   );
 }
