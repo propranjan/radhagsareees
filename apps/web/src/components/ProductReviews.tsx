@@ -72,16 +72,19 @@ export function ProductReviews({
       const response = await fetch(`/api/reviews?productId=${productId}&status=APPROVED`);
       const data = await response.json();
       
-      if (data.success && data.reviews) {
-        setReviews(data.reviews as OptimisticReview[]);
+      // Handle both success: true format and direct reviews array
+      const reviewsData = data.success ? data.reviews : (data.reviews || []);
+      
+      if (reviewsData && reviewsData.length >= 0) {
+        setReviews(reviewsData as OptimisticReview[]);
         
         // Calculate average rating and distribution
-        if (data.reviews.length > 0) {
-          const totalRating = data.reviews.reduce((sum: number, r: OptimisticReview) => sum + r.rating, 0);
-          setAverageRating(Math.round((totalRating / data.reviews.length) * 10) / 10);
+        if (reviewsData.length > 0) {
+          const totalRating = reviewsData.reduce((sum: number, r: OptimisticReview) => sum + r.rating, 0);
+          setAverageRating(Math.round((totalRating / reviewsData.length) * 10) / 10);
           
           const distribution: Record<number, number> = {};
-          data.reviews.forEach((r: OptimisticReview) => {
+          reviewsData.forEach((r: OptimisticReview) => {
             distribution[r.rating] = (distribution[r.rating] || 0) + 1;
           });
           setRatingDistribution(distribution);

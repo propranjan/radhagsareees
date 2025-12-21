@@ -128,7 +128,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Format response
-    const response: ReviewsListResponse = {
+    const response = {
+      success: true,
       reviews: reviews.map(review => ({
         id: review.id,
         productId: review.productId,
