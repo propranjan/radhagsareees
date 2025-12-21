@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 export function useCart() {
@@ -10,9 +10,12 @@ export function useCart() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const supabase = supabaseUrl && supabaseAnonKey 
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : null;
+  const supabase = useMemo(() => {
+    if (supabaseUrl && supabaseAnonKey) {
+      return createClient(supabaseUrl, supabaseAnonKey);
+    }
+    return null;
+  }, [supabaseUrl, supabaseAnonKey]);
 
   const addToCart = useCallback(async (
     productId: string,

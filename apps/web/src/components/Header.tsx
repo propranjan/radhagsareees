@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ShoppingBag, Heart, Search, Menu, Phone, Mail, MapPin, User, LogOut, Settings } from 'lucide-react';
@@ -16,23 +16,29 @@ export default function Header() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const supabase = supabaseUrl && supabaseAnonKey 
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : null;
+  const supabase = useMemo(() => {
+    if (supabaseUrl && supabaseAnonKey) {
+      return createClient(supabaseUrl, supabaseAnonKey);
+    }
+    return null;
+  }, [supabaseUrl, supabaseAnonKey]);
 
   useEffect(() => {
     if (!supabase) return;
 
+    let currentUserId: string | null = null;
+
     // Get current user
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUser(user);
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        currentUserId = authUser.id;
+        setUser(authUser);
         // Get user name from metadata or fetch from database
-        const name = user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+        const name = authUser.user_metadata?.name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User';
         setUserName(name);
         // Load cart count
-        loadCartCount(user.id);
+        loadCartCount(authUser.id);
       }
     };
 
@@ -41,11 +47,13 @@ export default function Header() {
     // Listen for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
+        currentUserId = session.user.id;
         setUser(session.user);
         const name = session.user.user_metadata?.name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User';
         setUserName(name);
         loadCartCount(session.user.id);
       } else {
+        currentUserId = null;
         setUser(null);
         setUserName('');
         setCartCount(0);
@@ -54,8 +62,8 @@ export default function Header() {
 
     // Listen for cart updates
     const handleCartUpdate = () => {
-      if (user) {
-        loadCartCount(user.id);
+      if (currentUserId) {
+        loadCartCount(currentUserId);
       }
     };
 
@@ -65,7 +73,7 @@ export default function Header() {
       authListener.subscription.unsubscribe();
       window.removeEventListener('cartUpdated', handleCartUpdate);
     };
-  }, [supabase, user]);
+  }, [supabase]);
 
   const loadCartCount = async (userId: string) => {
     try {

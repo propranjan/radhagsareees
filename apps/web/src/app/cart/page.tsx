@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react';
@@ -39,9 +39,12 @@ export default function CartPage() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const supabase = supabaseUrl && supabaseAnonKey 
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : null;
+  const supabase = useMemo(() => {
+    if (supabaseUrl && supabaseAnonKey) {
+      return createClient(supabaseUrl, supabaseAnonKey);
+    }
+    return null;
+  }, [supabaseUrl, supabaseAnonKey]);
 
   useEffect(() => {
     if (!supabase) {
