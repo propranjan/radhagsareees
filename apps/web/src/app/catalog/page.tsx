@@ -4,15 +4,20 @@ import { ProductCard } from '@radhagsareees/ui';
 import Link from 'next/link';
 import { Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useCart } from '@/hooks/useCart';
+import Header from '@/components/Header';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 export default function CatalogPage() {
+  const router = useRouter();
+  const { addToCart, adding } = useCart();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [showSuccess, setShowSuccess] = useState(false);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -37,10 +42,32 @@ export default function CatalogPage() {
     }
   };
 
+  const handleAddToCart = async (product: any) => {
+    // Get the first variant of the product to add to cart
+    const response = await fetch(`/api/products/${product.slug}`);
+    if (response.ok) {
+      const fullProduct = await response.json();
+      if (fullProduct.variants && fullProduct.variants.length > 0) {
+        const firstVariant = fullProduct.variants[0];
+        const result = await addToCart(fullProduct.id, firstVariant.id, 1);
+        
+        if (result.success) {
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 3000);
+        } else if (result.needsAuth) {
+          router.push('/auth/login');
+        }
+      }
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        </div>
       </div>
     );
   }
@@ -51,6 +78,8 @@ export default function CatalogPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header />
+      
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-8">
@@ -120,6 +149,15 @@ export default function CatalogPage() {
 
           {/* Products Grid */}
           <div className="flex-1">
+            {showSuccess && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+                <span className="text-green-600 font-medium">Added to cart successfully!</span>
+                <Link href="/cart" className="text-green-600 hover:underline font-medium">
+                  View Cart
+                </Link>
+              </div>
+            )}
+
             <div className="flex items-center justify-between mb-6">
               <p className="text-gray-600">Showing {products.length} products</p>
               <select className="border border-gray-300 rounded-lg px-3 py-2">
@@ -133,14 +171,19 @@ export default function CatalogPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((product) => (
-                <Link key={product.id} href={`/product/${product.id}`}>
+                <div key={product.id} onClick={(e) => {
+                  // Only navigate if not clicking on buttons
+                  if (!(e.target as HTMLElement).closest('button')) {
+                    router.push(`/products/${product.slug}`);
+                  }
+                }} className="cursor-pointer">
                   <ProductCard 
                     product={product}
                     className="h-full"
-                    onAddToCart={(product: any) => console.log('Add to cart:', product)}
-                    onToggleWishlist={(product: any) => console.log('Toggle wishlist:', product)}
+                    onAddToCart={() => handleAddToCart(product)}
+                    onToggleWishlist={() => console.log('Toggle wishlist:', product)}
                   />
-                </Link>
+                </div>
               ))}
             </div>
 
