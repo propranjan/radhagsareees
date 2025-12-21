@@ -38,6 +38,7 @@
     "@types/react-dom": "^18.2.14",
     "@types/uuid": "^11.0.0",
     "autoprefixer": "^10.4.16",
+    "cloudinary": "^2.8.0",
     "clsx": "^2.0.0",
     "correlation-id": "^5.2.0",
     "crypto": "^1.0.1",

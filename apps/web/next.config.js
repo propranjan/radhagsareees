@@ -27,8 +27,30 @@ const nextConfig = {
   },
   transpilePackages: ['@radhagsareees/ui', '@radhagsareees/db'],
   images: {
+    // Use remotePatterns for better security control
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+        pathname: '/**',
+      },
+      {
+        // Cloudinary - allows any cloud name for flexibility
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+    ],
+    // Also keep domains for backward compatibility
     domains: ['images.unsplash.com', 'via.placeholder.com', 'res.cloudinary.com'],
     minimumCacheTTL: 60,
+    // Enable modern image formats for better optimization
+    formats: ['image/avif', 'image/webp'],
   },
   env: {
     // Make sure these are available to the client
