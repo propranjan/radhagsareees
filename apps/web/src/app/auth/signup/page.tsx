@@ -63,6 +63,22 @@ export default function SignUpPage() {
         return;
       }
 
+      // Check if email already exists in database
+      try {
+        const checkResponse = await fetch(`/api/auth/check-email?email=${encodeURIComponent(email)}`);
+        if (checkResponse.ok) {
+          const checkData = await checkResponse.json();
+          if (checkData.exists) {
+            setError('An account with this email address already exists. Please login instead.');
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (checkError) {
+        // Continue with signup even if check fails - Supabase will handle duplicate prevention
+        console.warn('Email check failed:', checkError);
+      }
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -77,7 +93,14 @@ export default function SignUpPage() {
       console.log('Signup response:', { data, error: signUpError });
 
       if (signUpError) {
-        setError(signUpError.message);
+        // Handle specific error cases
+        if (signUpError.message.includes('already registered') || 
+            signUpError.message.includes('User already registered') ||
+            signUpError.message.includes('duplicate')) {
+          setError('An account with this email address already exists. Please login instead.');
+        } else {
+          setError(signUpError.message);
+        }
         setLoading(false);
         return;
       }
