@@ -11,6 +11,7 @@ export default function Header() {
   const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<string>('');
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -30,6 +31,8 @@ export default function Header() {
         // Get user name from metadata or fetch from database
         const name = user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
         setUserName(name);
+        // Load cart count
+        loadCartCount(user.id);
       }
     };
 
@@ -41,16 +44,40 @@ export default function Header() {
         setUser(session.user);
         const name = session.user.user_metadata?.name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User';
         setUserName(name);
+        loadCartCount(session.user.id);
       } else {
         setUser(null);
         setUserName('');
+        setCartCount(0);
       }
     });
 
+    // Listen for cart updates
+    const handleCartUpdate = () => {
+      if (user) {
+        loadCartCount(user.id);
+      }
+    };
+
+    window.addEventListener('cartUpdated', handleCartUpdate);
+
     return () => {
       authListener.subscription.unsubscribe();
+      window.removeEventListener('cartUpdated', handleCartUpdate);
     };
-  }, [supabase]);
+  }, [supabase, user]);
+
+  const loadCartCount = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/cart/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setCartCount(data.totalItems || 0);
+      }
+    } catch (error) {
+      console.error('Failed to load cart count:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     if (!supabase) return;
@@ -58,6 +85,7 @@ export default function Header() {
     await supabase.auth.signOut();
     setUser(null);
     setUserName('');
+    setCartCount(0);
     setShowUserMenu(false);
     router.push('/');
   };
@@ -160,9 +188,11 @@ export default function Header() {
             </Link>
             <Link href="/cart" className="p-2 text-gray-600 hover:text-primary-600 transition-colors relative">
               <ShoppingBag className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                2
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
             </Link>
             <button className="md:hidden p-2 text-gray-600 hover:text-primary-600 transition-colors">
               <Menu className="w-5 h-5" />
