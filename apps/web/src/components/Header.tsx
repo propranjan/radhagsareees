@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShoppingBag, Heart, Search, Menu, Phone, Mail, MapPin, User, LogOut, Settings } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Menu, Phone, Mail, MapPin, User, LogOut, Settings, Package } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 export default function Header() {
@@ -167,6 +167,14 @@ export default function Header() {
                 
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-2">
+                    <Link
+                      href="/orders"
+                      className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      <Package className="w-4 h-4" />
+                      <span>My Orders</span>
+                    </Link>
                     <Link
                       href="/settings"
                       className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"

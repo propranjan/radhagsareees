@@ -22,6 +22,7 @@ export async function GET(
               select: {
                 id: true,
                 title: true,
+                slug: true,
                 images: true,
               },
             },
@@ -74,11 +75,14 @@ export async function GET(
       amount: order.amount,
       tax: order.tax,
       shipping: order.shipping,
+      discount: order.discount,
       createdAt: order.createdAt.toISOString(),
+      updatedAt: order.updatedAt.toISOString(),
       items: order.orderItems.map((item) => ({
         id: item.id,
         quantity: item.quantity,
         price: item.price,
+        total: item.total,
         product: item.product,
         variant: item.variant,
       })),
