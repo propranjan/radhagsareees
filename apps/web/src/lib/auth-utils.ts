@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
+import { createClient } from '@supabase/supabase-js';
 
 export interface AuthenticatedUser {
   id: string;
@@ -15,7 +16,7 @@ export interface AuthResult {
 }
 
 /**
- * Extract and verify JWT token from request headers
+ * Extract and verify token from request headers using Supabase
  */
 export async function authenticateRequest(request: NextRequest): Promise<AuthResult> {
   try {
@@ -37,12 +38,58 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
       };
     }
 
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      throw new Error('JWT_SECRET environment variable is not set');
+    // Use Supabase to verify the token
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      // Fallback to JWT verification if Supabase not configured
+      return verifyWithJWT(token);
     }
 
-    // Verify JWT token
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Get user from token
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      console.error('Supabase auth error:', error);
+      // Fallback to JWT verification
+      return verifyWithJWT(token);
+    }
+
+    return {
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email || '',
+        name: user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+        role: (user.user_metadata?.role as 'CUSTOMER' | 'ADMIN' | 'MODERATOR') || 'CUSTOMER',
+      },
+    };
+
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return {
+      success: false,
+      error: 'Authentication failed',
+    };
+  }
+}
+
+/**
+ * Fallback JWT verification for custom tokens
+ */
+function verifyWithJWT(token: string): AuthResult {
+  try {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return {
+        success: false,
+        error: 'JWT_SECRET not configured',
+      };
+    }
+
     const decoded = jwt.verify(token, jwtSecret) as any;
     
     if (!decoded.id || !decoded.email) {
@@ -61,7 +108,6 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
         role: decoded.role || 'CUSTOMER',
       },
     };
-
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
       return {
@@ -77,10 +123,9 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
       };
     }
 
-    console.error('Authentication error:', error);
     return {
       success: false,
-      error: 'Authentication failed',
+      error: 'Token verification failed',
     };
   }
 }
