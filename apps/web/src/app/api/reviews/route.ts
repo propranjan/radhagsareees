@@ -226,11 +226,21 @@ export async function POST(request: NextRequest) {
 
     const validation = validateReviewSubmission(requestBody);
     if (!validation.success) {
+      // Extract specific error messages from Zod error
+      let errorMessages = 'Validation failed';
+      if (validation.error && 'issues' in validation.error) {
+        errorMessages = (validation.error as any).issues?.map((issue: any) => 
+          `${issue.path.join('.')}: ${issue.message}`
+        ).join(', ') || 'Validation failed';
+      } else if (validation.error?.message) {
+        errorMessages = validation.error.message;
+      }
+      
       return NextResponse.json(
         {
           success: false,
           error: 'Invalid request data',
-          message: 'Please check your submission data',
+          message: errorMessages,
           details: validation.error,
         },
         { status: 400 }

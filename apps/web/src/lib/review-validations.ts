@@ -11,9 +11,9 @@ export const reviewSubmissionSchema = z.object({
     .min(1, 'Review title is required')
     .max(100, 'Review title must be 100 characters or less'),
   comment: z.string()
-    .min(10, 'Review comment must be at least 10 characters')
+    .min(1, 'Review comment is required')
     .max(2000, 'Review comment must be 2000 characters or less'),
-  imageUrls: z.array(z.string().url('Invalid image URL'))
+  imageUrls: z.array(z.string())
     .max(3, 'Maximum 3 images allowed')
     .optional()
     .default([]),
