@@ -36,7 +36,7 @@ export async function POST(
       },
     });
 
-    return NextResponse.json(address);
+    return NextResponse.json({ success: true, address });
   } catch (error) {
     console.error('Error creating address:', error);
     return NextResponse.json(
@@ -65,7 +65,7 @@ export async function GET(
       ],
     });
 
-    return NextResponse.json(addresses);
+    return NextResponse.json({ addresses });
   } catch (error) {
     console.error('Error fetching addresses:', error);
     return NextResponse.json(
