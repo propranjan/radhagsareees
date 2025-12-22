@@ -83,6 +83,7 @@ export default function SignUpPage() {
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             name: name || email.split('@')[0],
             full_name: name || email.split('@')[0],
@@ -148,22 +149,46 @@ export default function SignUpPage() {
           } else {
             const syncData = await syncResponse.json();
             console.log('User synced successfully:', syncData);
-            setSuccess('Account created successfully! Please check your email to verify your account.');
+            // Check if email confirmation is required
+            if (data.user?.identities?.length === 0) {
+              // Email confirmation required - user exists but not confirmed
+              setSuccess('Account created! Please check your email (including spam folder) to verify your account. If you don\'t receive an email within a few minutes, try signing up again.');
+            } else if (data.session) {
+              // User is already confirmed (no email confirmation required)
+              setSuccess('Account created successfully! Redirecting to your dashboard...');
+              setTimeout(() => {
+                router.push('/');
+              }, 1500);
+              return;
+            } else {
+              setSuccess('Account created successfully! Please check your email (including spam folder) to verify your account.');
+            }
           }
         } catch (syncError) {
           console.error('Error syncing user:', syncError);
           // Don't block signup if sync fails
-          setSuccess('Account created successfully! Your profile will be synced on first login.');
+          setSuccess('Account created successfully! Your profile will be synced on first login. Please check your email to verify.');
         }
       } else {
-        setSuccess('Account created successfully! Please check your email to verify your account.');
+        // Check if email confirmation is required
+        if (data.user?.identities?.length === 0) {
+          setSuccess('Account created! Please check your email (including spam folder) to verify your account.');
+        } else if (data.session) {
+          setSuccess('Account created successfully! Redirecting...');
+          setTimeout(() => {
+            router.push('/');
+          }, 1500);
+          return;
+        } else {
+          setSuccess('Account created successfully! Please check your email (including spam folder) to verify your account.');
+        }
       }
       setLoading(false);
       
-      // Redirect to login after 2 seconds
+      // Redirect to login after 3 seconds
       setTimeout(() => {
         router.push('/auth/login');
-      }, 2000);
+      }, 3000);
     } catch (err) {
       console.error('Signup error:', err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred during signup');

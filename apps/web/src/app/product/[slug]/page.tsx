@@ -125,16 +125,29 @@ export default function ProductPage({ params }: ProductPageProps) {
     if (!selectedVariant) return;
 
     try {
+      // Get the current session token
+      const supabase = getSupabaseClient();
+      let headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers["Authorization"] = `Bearer ${session.access_token}`;
+        }
+      }
+
       const response = await fetch("/api/cart", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           variantId: selectedVariant.id,
           quantity: quantity,
         }),
       });
+
+      const data = await response.json();
 
       if (response.ok) {
         // Track add to cart event
@@ -147,9 +160,15 @@ export default function ProductPage({ params }: ProductPageProps) {
           category: product?.category.name,
         });
 
+        // Trigger cart update event for header
+        window.dispatchEvent(new CustomEvent('cartUpdated'));
+
         alert("Added to cart successfully!");
+      } else if (response.status === 401 || data.needsAuth) {
+        // Redirect to login if not authenticated
+        window.location.href = '/auth/login?redirect=' + encodeURIComponent(window.location.pathname);
       } else {
-        throw new Error("Failed to add to cart");
+        throw new Error(data.error || "Failed to add to cart");
       }
     } catch (error) {
       console.error("Error adding to cart:", error);
