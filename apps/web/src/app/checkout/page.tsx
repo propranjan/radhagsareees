@@ -3,10 +3,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, MapPin, CreditCard, Truck, CheckCircle, Plus, AlertCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Truck, CheckCircle, Plus, AlertCircle, Loader2 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import Header from '@/components/Header';
 import Image from 'next/image';
+import { useRazorpay, createRazorpayOrderAPI, verifyRazorpayPaymentAPI } from '@/hooks/useRazorpay';
 
 interface CartItem {
   id: string;
@@ -42,13 +43,14 @@ interface Address {
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { isLoaded: razorpayLoaded, openCheckout } = useRazorpay();
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<string>('cod');
+  const [paymentMethod, setPaymentMethod] = useState<string>('razorpay');
   const [subtotal, setSubtotal] = useState(0);
   const [error, setError] = useState('');
   const [showAddAddress, setShowAddAddress] = useState(false);
@@ -188,36 +190,113 @@ export default function CheckoutPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/checkout/place-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          shippingAddressId: selectedAddressId,
-          paymentMethod,
-          items: cartItems.map(item => ({
-            variantId: item.variant.id,
-            productId: item.product.id,
-            quantity: item.quantity,
-            price: Number(item.variant.price),
-          })),
-        }),
+      // For Cash on Delivery, use the existing place-order API
+      if (paymentMethod === 'cod') {
+        const response = await fetch('/api/checkout/place-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            shippingAddressId: selectedAddressId,
+            paymentMethod: 'cod',
+            items: cartItems.map(item => ({
+              variantId: item.variant.id,
+              productId: item.product.id,
+              quantity: item.quantity,
+              price: Number(item.variant.price),
+            })),
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          window.dispatchEvent(new CustomEvent('cartUpdated'));
+          router.push(`/checkout/success?orderId=${data.orderId}`);
+        } else {
+          setError(data.error || 'Failed to place order');
+        }
+        return;
+      }
+
+      // For Razorpay payment
+      if (!razorpayLoaded) {
+        setError('Payment gateway is loading. Please try again.');
+        setProcessing(false);
+        return;
+      }
+
+      // Create Razorpay order
+      const orderResponse = await createRazorpayOrderAPI({
+        userId: user.id,
+        shippingAddressId: selectedAddressId,
+        items: cartItems.map(item => ({
+          variantId: item.variant.id,
+          productId: item.product.id,
+          quantity: item.quantity,
+          price: Number(item.variant.price),
+        })),
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // Trigger cart update in header
-        window.dispatchEvent(new CustomEvent('cartUpdated'));
-        // Redirect to order confirmation
-        router.push(`/checkout/success?orderId=${data.orderId}`);
-      } else {
-        setError(data.error || 'Failed to place order');
+      if (!orderResponse.success) {
+        setError(orderResponse.error || 'Failed to create order');
+        setProcessing(false);
+        return;
       }
+
+      const { razorpay, order, customer, prefill } = orderResponse;
+
+      // Open Razorpay checkout
+      openCheckout({
+        key: razorpay.keyId,
+        amount: razorpay.amount,
+        currency: razorpay.currency,
+        name: 'Radha G Sarees',
+        description: `Order #${order.orderNumber}`,
+        order_id: razorpay.orderId,
+        prefill: {
+          name: prefill.name || customer.name,
+          email: customer.email,
+          contact: prefill.contact || customer.phone,
+        },
+        theme: {
+          color: '#9333ea', // Primary purple color
+        },
+        handler: async (response) => {
+          try {
+            // Verify payment
+            const verifyResult = await verifyRazorpayPaymentAPI({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderId: order.id,
+            });
+
+            if (verifyResult.success) {
+              window.dispatchEvent(new CustomEvent('cartUpdated'));
+              router.push(`/checkout/success?orderId=${verifyResult.orderId}`);
+            } else {
+              setError('Payment verification failed. Please contact support.');
+              setProcessing(false);
+            }
+          } catch (err) {
+            console.error('Payment verification error:', err);
+            setError('Payment verification failed. Please contact support.');
+            setProcessing(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setProcessing(false);
+            setError('Payment was cancelled. Your order has not been placed.');
+          },
+          escape: false,
+          backdropclose: false,
+        },
+      });
     } catch (err) {
       console.error('Failed to place order:', err);
       setError('Failed to place order. Please try again.');
-    } finally {
       setProcessing(false);
     }
   };
@@ -411,6 +490,37 @@ export default function CheckoutPage() {
               <div className="space-y-3">
                 <label
                   className={`block p-4 border rounded-lg cursor-pointer transition-colors ${
+                    paymentMethod === 'razorpay'
+                      ? 'border-primary-600 bg-primary-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="razorpay"
+                      checked={paymentMethod === 'razorpay'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-900">Pay Online</span>
+                        <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">Recommended</span>
+                      </div>
+                      <p className="text-sm text-gray-600">UPI, Cards, Net Banking, Wallets</p>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2"/>
+                        <path d="M2 10H22" stroke="currentColor" strokeWidth="2"/>
+                      </svg>
+                    </div>
+                  </div>
+                </label>
+
+                <label
+                  className={`block p-4 border rounded-lg cursor-pointer transition-colors ${
                     paymentMethod === 'cod'
                       ? 'border-primary-600 bg-primary-50'
                       : 'border-gray-200 hover:border-gray-300'
@@ -430,29 +540,14 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                 </label>
-
-                <label
-                  className={`block p-4 border rounded-lg cursor-pointer transition-colors ${
-                    paymentMethod === 'prepaid'
-                      ? 'border-primary-600 bg-primary-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="prepaid"
-                      checked={paymentMethod === 'prepaid'}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                    />
-                    <div>
-                      <span className="font-medium text-gray-900">Pay Now (Demo)</span>
-                      <p className="text-sm text-gray-600">Simulated online payment - no actual charge</p>
-                    </div>
-                  </div>
-                </label>
               </div>
+
+              {!razorpayLoaded && paymentMethod === 'razorpay' && (
+                <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading payment gateway...
+                </div>
+              )}
             </div>
 
             {/* Order Items */}
