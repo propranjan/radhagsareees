@@ -56,6 +56,13 @@ interface Order {
     zipCode: string;
     phone: string;
   } | null;
+  fulfillment: {
+    id: string;
+    status: string;
+    awbCode: string;
+    courierName: string;
+    trackingUrl?: string;
+  } | null;
 }
 
 interface Pagination {
@@ -273,6 +280,9 @@ export default function OrdersPage() {
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Shipment
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Date
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -332,6 +342,25 @@ export default function OrdersPage() {
                               {getStatusIcon(order.status)}
                               {order.status}
                             </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {order.fulfillment ? (
+                            <div className="text-xs">
+                              <span className={`inline-flex items-center gap-1 px-2 py-1 font-medium rounded-full ${
+                                order.fulfillment.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                                order.fulfillment.status === 'IN_TRANSIT' ? 'bg-orange-100 text-orange-800' :
+                                order.fulfillment.status === 'PICKED' ? 'bg-purple-100 text-purple-800' :
+                                order.fulfillment.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                                <Truck className="w-3 h-3" />
+                                {order.fulfillment.status.replace(/_/g, ' ')}
+                              </span>
+                              <p className="mt-1 text-gray-500">{order.fulfillment.courierName}</p>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">Not shipped</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

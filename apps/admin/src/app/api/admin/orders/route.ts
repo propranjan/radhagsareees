@@ -60,6 +60,17 @@ export async function GET(request: NextRequest) {
           },
           payments: true,
           shippingAddress: true,
+          fulfillments: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            select: {
+              id: true,
+              status: true,
+              awbCode: true,
+              courierName: true,
+              trackingUrl: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -106,6 +117,13 @@ export async function GET(request: NextRequest) {
         state: order.shippingAddress.state,
         zipCode: order.shippingAddress.zipCode,
         phone: order.shippingAddress.phone,
+      } : null,
+      fulfillment: order.fulfillments[0] ? {
+        id: order.fulfillments[0].id,
+        status: order.fulfillments[0].status,
+        awbCode: order.fulfillments[0].awbCode,
+        courierName: order.fulfillments[0].courierName,
+        trackingUrl: order.fulfillments[0].trackingUrl,
       } : null,
     }));
 
