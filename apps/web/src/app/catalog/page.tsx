@@ -66,6 +66,7 @@ function CatalogContent() {
   const [selectedPriceRange, setSelectedPriceRange] = useState<PriceRange | null>(null);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState('newest');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Initialize filters from URL params
   useEffect(() => {
@@ -347,10 +348,20 @@ function CatalogContent() {
                 )}
               </button>
               <div className="flex items-center border border-gray-300 rounded-lg">
-                <button className="p-2 hover:bg-gray-50">
+                <button 
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-primary-100 text-primary-600' : 'hover:bg-gray-50'}`}
+                  aria-label="Grid view"
+                  aria-pressed={viewMode === 'grid'}
+                >
                   <Grid className="w-4 h-4" />
                 </button>
-                <button className="p-2 hover:bg-gray-50 border-l border-gray-300">
+                <button 
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 border-l border-gray-300 transition-colors ${viewMode === 'list' ? 'bg-primary-100 text-primary-600' : 'hover:bg-gray-50'}`}
+                  aria-label="List view"
+                  aria-pressed={viewMode === 'list'}
+                >
                   <List className="w-4 h-4" />
                 </button>
               </div>
@@ -454,19 +465,76 @@ function CatalogContent() {
             )}
 
             {!loading && products.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className={viewMode === 'grid' 
+                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+                : "flex flex-col gap-4"
+              }>
                 {products.map((product) => (
-                  <div key={product.id} onClick={(e) => {
-                    if (!(e.target as HTMLElement).closest('button')) {
-                      router.push(`/product/${product.slug}`);
-                    }
-                  }} className="cursor-pointer">
-                    <ProductCard 
-                      product={product}
-                      className="h-full"
-                      onAddToCart={() => handleAddToCart(product)}
-                      onToggleWishlist={() => console.log('Toggle wishlist:', product)}
-                    />
+                  <div 
+                    key={product.id} 
+                    onClick={(e) => {
+                      if (!(e.target as HTMLElement).closest('button')) {
+                        router.push(`/product/${product.slug}`);
+                      }
+                    }} 
+                    className={`cursor-pointer ${viewMode === 'list' ? 'bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden' : ''}`}
+                  >
+                    {viewMode === 'grid' ? (
+                      <ProductCard 
+                        product={product}
+                        className="h-full"
+                        onAddToCart={() => handleAddToCart(product)}
+                        onToggleWishlist={() => console.log('Toggle wishlist:', product)}
+                      />
+                    ) : (
+                      <div className="flex flex-col sm:flex-row gap-4 p-4">
+                        <div className="sm:w-48 h-48 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                          <img 
+                            src={product.image} 
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="text-sm text-primary-600 font-medium">{product.category}</p>
+                                <h3 className="text-lg font-semibold text-gray-900 mt-1">{product.name}</h3>
+                              </div>
+                              {product.isNew && (
+                                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">New</span>
+                              )}
+                            </div>
+                            <p className="text-gray-600 text-sm mt-2 line-clamp-2">{product.description || 'Beautiful handcrafted saree with exquisite design and premium quality fabric.'}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <div className="flex items-center text-yellow-400">
+                                <Star className="w-4 h-4 fill-current" />
+                                <span className="text-gray-700 text-sm ml-1">{product.rating?.toFixed(1) || '4.5'}</span>
+                              </div>
+                              <span className="text-gray-400 text-sm">({product.reviewCount || 0} reviews)</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between mt-4">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl font-bold text-gray-900">₹{product.price?.toLocaleString()}</span>
+                              {product.originalPrice && product.originalPrice > product.price && (
+                                <span className="text-gray-400 line-through text-sm">₹{product.originalPrice?.toLocaleString()}</span>
+                              )}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddToCart(product);
+                              }}
+                              className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            >
+                              Add to Cart
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
