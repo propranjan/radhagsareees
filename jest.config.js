@@ -31,8 +31,10 @@ const config = {
       statements: 85
     }
   },
+  roots: ['<rootDir>'],
+  modulePaths: ['<rootDir>'],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
+    '^@/(.*)$': '<rootDir>/apps/web/src/$1',
     '^@radhagsareees/ui$': '<rootDir>/packages/ui/src',
     '^@radhagsareees/db$': '<rootDir>/packages/db/src'
   },
@@ -44,6 +46,11 @@ const config = {
       {
         tsconfig: {
           jsx: 'react-jsx',
+          esModuleInterop: true,
+          baseUrl: '.',
+          paths: {
+            '@/*': ['./apps/web/src/*']
+          }
         },
       },
     ],
