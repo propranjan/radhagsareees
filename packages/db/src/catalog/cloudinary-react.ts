@@ -10,8 +10,8 @@ import {
   getVariantOverlayUrl,
   getCategoryImageUrl,
   imageTransformations,
-  type CloudinaryImageSet,
 } from './cloudinary';
+import type { CloudinaryImageSet } from './types';
 
 /**
  * Hook to get responsive image URLs for a variant
