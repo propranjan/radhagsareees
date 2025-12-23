@@ -5,14 +5,12 @@ import Link from 'next/link';
 import { 
   Truck, 
   Package, 
-  Clock, 
   MapPin, 
   CheckCircle, 
   ArrowRight, 
   ExternalLink,
   Search,
   Info,
-  IndianRupee,
   Globe,
   Shield
 } from 'lucide-react';
@@ -97,103 +95,6 @@ export default function ShippingInfoPage() {
                 <Info className="w-4 h-4" />
                 Tracking opens on Shiprocket's official tracking portal
               </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Shipping Rates */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-serif font-bold text-gray-900 mb-4">
-              Shipping Rates & Delivery Times
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              We offer competitive shipping rates with fast delivery across India and worldwide
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Standard Shipping */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <Package className="w-7 h-7 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Standard Shipping</h3>
-              <div className="text-3xl font-bold text-gray-900 mb-1">
-                <span className="text-lg text-gray-500 font-normal">From</span> ₹49
-              </div>
-              <p className="text-gray-500 text-sm mb-4">5-7 Business Days</p>
-              <ul className="space-y-2 text-gray-600 text-sm">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  All India Delivery
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Real-time Tracking
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Secure Packaging
-                </li>
-              </ul>
-            </div>
-
-            {/* Express Shipping */}
-            <div className="bg-white rounded-xl shadow-md border-2 border-primary-500 p-6 relative">
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <span className="bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  POPULAR
-                </span>
-              </div>
-              <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-                <Truck className="w-7 h-7 text-primary-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Express Shipping</h3>
-              <div className="text-3xl font-bold text-gray-900 mb-1">
-                <span className="text-lg text-gray-500 font-normal">From</span> ₹99
-              </div>
-              <p className="text-gray-500 text-sm mb-4">2-4 Business Days</p>
-              <ul className="space-y-2 text-gray-600 text-sm">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Priority Handling
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  SMS & Email Updates
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Metro Cities: 2 Days
-                </li>
-              </ul>
-            </div>
-
-            {/* Free Shipping */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <IndianRupee className="w-7 h-7 text-green-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Free Shipping</h3>
-              <div className="text-3xl font-bold text-green-600 mb-1">FREE</div>
-              <p className="text-gray-500 text-sm mb-4">Orders above ₹2,999</p>
-              <ul className="space-y-2 text-gray-600 text-sm">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  No Minimum Weight
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Express Delivery Included
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Pan India Coverage
-                </li>
-              </ul>
             </div>
           </div>
         </div>
