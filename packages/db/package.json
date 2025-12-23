@@ -22,7 +22,8 @@
     "@prisma/client": "5.22.0",
     "@supabase/supabase-js": "^2.38.0",
     "@types/node": "^20.8.9",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.8.0"
   },
   "devDependencies": {
     "@radhagsareees/config": "workspace:*",

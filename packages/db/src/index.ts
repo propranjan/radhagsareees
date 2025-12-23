@@ -37,3 +37,6 @@ export type {
   Address,
   Payment,
 } from '@prisma/client';
+
+// Product Catalog with Cloudinary integration
+export * from './catalog';
