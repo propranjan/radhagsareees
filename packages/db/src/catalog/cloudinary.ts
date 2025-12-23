@@ -7,8 +7,8 @@
 
 import type { CloudinaryImageSet, CloudinaryFolderStructure } from './types';
 
-// Default cloud name - should be configured via environment variable
-const DEFAULT_CLOUD_NAME = 'your-cloud-name';
+// Default cloud name - set to actual cloud name for production
+const DEFAULT_CLOUD_NAME = 'dmkm5eqtk';
 
 /**
  * Get Cloudinary cloud name from environment or use default
