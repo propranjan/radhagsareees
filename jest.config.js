@@ -5,7 +5,9 @@ const config = {
   testPathIgnorePatterns: [
     '<rootDir>/.next/',
     '<rootDir>/node_modules/',
-    '<rootDir>/packages/db/node_modules/'
+    '<rootDir>/packages/db/node_modules/',
+    '<rootDir>/e2e/',
+    '\\.spec\\.ts$'
   ],
   collectCoverageFrom: [
     'packages/ui/src/**/*.{js,jsx,ts,tsx}',

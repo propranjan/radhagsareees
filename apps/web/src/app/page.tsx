@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShoppingBag, Heart, User, Search, Menu, Phone, Mail, MapPin } from 'lucide-react';
 import Header from '@/components/Header';
 import FeaturedCategories from '@/components/FeaturedCategories';
@@ -41,9 +42,12 @@ export default function HomePage() {
             </div>
             <div className="relative">
               <div className="aspect-[4/5] bg-gradient-to-br from-primary-100 to-secondary-100 rounded-2xl overflow-hidden">
-                <img 
+                <Image 
                   src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&h=750&fit=crop"
                   alt="Beautiful Saree Collection"
+                  width={600}
+                  height={750}
+                  priority
                   className="w-full h-full object-cover"
                 />
               </div>

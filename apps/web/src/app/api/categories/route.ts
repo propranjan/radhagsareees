@@ -35,6 +35,11 @@ export async function GET() {
         image: cat.image,
         productCount: cat._count.products,
       })),
+    }, {
+      headers: {
+        // Categories change infrequently, cache longer
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
+      },
     });
   } catch (error) {
     console.error('Failed to fetch categories:', error);

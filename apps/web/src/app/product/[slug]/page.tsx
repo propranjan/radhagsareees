@@ -4,12 +4,22 @@ import { useState, useEffect } from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Star, ShoppingCart, Heart, Share2, Truck } from "lucide-react";
-import { TryOnCanvas } from "@radhagsareees/ui";
-import { TryOnModal } from "../../../components/TryOnModal";
+import dynamic from "next/dynamic";
 import { ProductReviews } from "../../../components/ProductReviews";
 import { ClientTryOnButton } from "../../../components/feature-flags/TryOnButton";
 import { analytics } from "../../../lib/analytics";
 import { createClient } from '@supabase/supabase-js';
+
+// Dynamically import heavy components to improve initial load time
+const TryOnCanvas = dynamic(
+  () => import("@radhagsareees/ui").then(mod => ({ default: mod.TryOnCanvas })),
+  { ssr: false }
+);
+
+const TryOnModal = dynamic(
+  () => import("../../../components/TryOnModal").then(mod => ({ default: mod.TryOnModal })),
+  { ssr: false }
+);
 
 // Initialize Supabase client
 const getSupabaseClient = () => {

@@ -69,7 +69,7 @@ async function processPaymentSuccess(webhookData: RazorpayWebhook) {
     }
 
     // Check if order is already processed
-    if (order.status === 'CONFIRMED' || order.status === 'PROCESSING') {
+    if (order.status === 'PROCESSING' || order.status === 'SHIPPED' || order.status === 'DELIVERED') {
       console.warn(`Order ${order.id} already processed, skipping webhook`);
       return order;
     }
@@ -120,7 +120,7 @@ async function processPaymentSuccess(webhookData: RazorpayWebhook) {
     const updatedOrder = await tx.order.update({
       where: { id: order.id },
       data: {
-        status: 'CONFIRMED',
+        status: 'PROCESSING',
         updatedAt: new Date(),
       }
     });
@@ -133,10 +133,9 @@ async function processPaymentSuccess(webhookData: RazorpayWebhook) {
         status: 'COMPLETED',
         method: getPaymentMethodName(payment.method),
         gatewayId: paymentId,
-        gatewayOrderId: orderId,
-        gatewayResponse: {
+        gatewayData: {
+          razorpayOrderId: orderId,
           paymentId,
-          orderId,
           amount: paymentAmount,
           currency: payment.currency,
           method: payment.method,
@@ -200,10 +199,9 @@ async function processPaymentFailure(webhookData: RazorpayWebhook) {
       status: 'FAILED',
       method: getPaymentMethodName(payment.method),
       gatewayId: payment.id,
-      gatewayOrderId: orderId,
-      gatewayResponse: {
+      gatewayData: {
+        razorpayOrderId: orderId,
         paymentId: payment.id,
-        orderId,
         amount: payment.amount,
         currency: payment.currency,
         method: payment.method,

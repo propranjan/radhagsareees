@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
 import Link from 'next/link';
 import {
@@ -110,8 +110,8 @@ const FULFILLMENT_STATUS_COLORS: Record<string, string> = {
   CANCELLED: 'bg-gray-100 text-gray-600',
 };
 
-export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function OrderDetailPage() {
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -235,12 +235,17 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     f => !['CANCELLED', 'RTO_DELIVERED'].includes(f.status)
   );
 
+  // Allow shipment creation if:
+  // - No active shipment exists
+  // - Order is not cancelled or delivered
+  // - Shipping address exists
+  // - Either payment is completed OR order is in PROCESSING status (payment was successful)
   const canCreateShipment = 
     !hasActiveShipment &&
     order.status !== 'CANCELLED' &&
     order.status !== 'DELIVERED' &&
     order.shippingAddress &&
-    order.payment?.status === 'COMPLETED';
+    (order.payment?.status === 'COMPLETED' || order.status === 'PROCESSING');
 
   return (
     <AdminLayout>

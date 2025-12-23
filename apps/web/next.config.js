@@ -48,10 +48,19 @@ const nextConfig = {
     ],
     // Also keep domains for backward compatibility
     domains: ['images.unsplash.com', 'via.placeholder.com', 'res.cloudinary.com'],
-    minimumCacheTTL: 60,
+    minimumCacheTTL: 86400, // Cache images for 24 hours
     // Enable modern image formats for better optimization
     formats: ['image/avif', 'image/webp'],
+    // Device sizes for responsive images
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
+  // Enable compression
+  compress: true,
+  // Power by header - remove for security
+  poweredByHeader: false,
+  // Generate ETags for caching
+  generateEtags: true,
   env: {
     // Make sure these are available to the client
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
@@ -124,6 +133,26 @@ const nextConfig = {
           {
             key: 'X-Robots-Tag',
             value: 'noindex, nofollow'
+          }
+        ]
+      },
+      // Cache static assets for 1 year
+      {
+        source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          }
+        ]
+      },
+      // Cache images
+      {
+        source: '/images/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800'
           }
         ]
       }

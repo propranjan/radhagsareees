@@ -4,11 +4,31 @@ if (!process.env.VERCEL && !process.env.CI) {
 }
 
 import './globals.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import { Inter, Playfair_Display } from 'next/font/google';
 
-// Force dynamic rendering for the entire app
-export const dynamic = 'force-dynamic';
-export const dynamicParams = true;
+// Optimized font loading with display swap for better LCP
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+  preload: true,
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-playfair',
+  preload: true,
+});
+
+// Viewport configuration for mobile optimization
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#7c3aed',
+};
 
 export const metadata: Metadata = {
   title: 'Radha G Sarees - Exquisite Collection of Traditional Sarees',
@@ -16,6 +36,7 @@ export const metadata: Metadata = {
   keywords: 'sarees, silk sarees, cotton sarees, designer sarees, traditional wear, Indian fashion',
   authors: [{ name: 'Radha G Sarees' }],
   creator: 'Radha G Sarees',
+  metadataBase: new URL('https://radhagsarees.com'),
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -42,8 +63,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Preconnect to external domains for faster resource loading */}
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+      </head>
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         {children}
       </body>
     </html>
