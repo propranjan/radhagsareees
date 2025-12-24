@@ -29,12 +29,15 @@ export const initializeCloudinary = () => {
  * Cloudinary folder structure for organized asset management
  */
 export const CLOUDINARY_FOLDERS = {
+  // Media library base (main source for saree images)
+  MEDIA_LIBRARY: 'radhag-sarees',
+  
   // User uploads
   USER_UPLOADS: 'saree-tryon/user-images',
   USER_UPLOADS_TEMP: 'saree-tryon/user-images/temp',
   
-  // Saree product assets
-  SAREE_IMAGES: 'saree-tryon/saree-assets/images',
+  // Saree product assets (from media library)
+  SAREE_IMAGES: 'radhag-sarees',
   SAREE_MASKS: 'saree-tryon/saree-assets/masks',
   SAREE_OVERLAYS: 'saree-tryon/saree-assets/overlays',
   SAREE_TEXTURES: 'saree-tryon/saree-assets/textures',
@@ -53,31 +56,32 @@ export const CLOUDINARY_FOLDERS = {
  */
 export class CloudinaryPaths {
   /**
-   * Get paths for a specific saree by SKU and variant
+   * Get paths for a specific saree by SKU and variant from media library
    */
   static getSareePaths(sku: string, variant: string = 'default') {
-    const basePath = `${CLOUDINARY_FOLDERS.SAREE_IMAGES}/${sku}/${variant}`;
+    // Try variant-specific image first, then fallback to SKU-only
+    const imagePath = `${CLOUDINARY_FOLDERS.SAREE_IMAGES}/${sku}`;
     const maskPath = `${CLOUDINARY_FOLDERS.SAREE_MASKS}/${sku}/${variant}`;
     const overlayPath = `${CLOUDINARY_FOLDERS.SAREE_OVERLAYS}/${sku}/${variant}`;
 
     return {
       image: {
-        folder: basePath,
-        filename: `saree-${sku}-${variant}`,
+        folder: imagePath,
+        filename: sku, // Use SKU as filename in media library
         url: (cloudName: string) => 
-          `https://res.cloudinary.com/${cloudName}/image/upload/v1/${basePath}/saree-${sku}-${variant}.jpg`,
+          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${imagePath}/${sku}.jpg`,
       },
       mask: {
         folder: maskPath,
         filename: `mask-${sku}-${variant}`,
         url: (cloudName: string) => 
-          `https://res.cloudinary.com/${cloudName}/image/upload/v1/${maskPath}/mask-${sku}-${variant}.png`,
+          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${maskPath}/mask-${sku}-${variant}.png`,
       },
       overlay: {
         folder: overlayPath,
         filename: `overlay-${sku}-${variant}`,
         url: (cloudName: string) => 
-          `https://res.cloudinary.com/${cloudName}/image/upload/v1/${overlayPath}/overlay-${sku}-${variant}.png`,
+          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${overlayPath}/overlay-${sku}-${variant}.png`,
       },
     };
   }
