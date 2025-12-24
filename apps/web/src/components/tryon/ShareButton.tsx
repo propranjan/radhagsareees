@@ -5,12 +5,16 @@ import { useState } from 'react';
 interface ShareButtonProps {
   imageUrl: string;
   title?: string;
+  productName?: string;
+  productPrice?: number;
   onShare?: (platform: string) => void;
 }
 
 export default function ShareButton({
   imageUrl,
   title = 'Check out my Saree Try-On!',
+  productName,
+  productPrice,
   onShare,
 }: ShareButtonProps) {
   const [showOptions, setShowOptions] = useState(false);

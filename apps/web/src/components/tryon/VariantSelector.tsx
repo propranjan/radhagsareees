@@ -2,24 +2,22 @@
 
 import { useState } from 'react';
 
-interface Variant {
-  id: string;
-  name: string;
-  color: string;
-  price: number;
-  image: string;
-}
-
 interface VariantSelectorProps {
-  variants: Variant[];
-  onSelect: (variant: Variant) => void;
-  selectedVariant?: Variant;
+  variants: Array<{
+    id: string;
+    name: string;
+    image: string;
+  }>;
+  onSelect: (variantId: string) => void;
+  selectedVariant?: string;
+  disabled?: boolean;
 }
 
 export default function VariantSelector({
   variants,
   onSelect,
   selectedVariant,
+  disabled = false,
 }: VariantSelectorProps) {
   return (
     <div className="space-y-4">
@@ -28,12 +26,12 @@ export default function VariantSelector({
         {variants.map((variant) => (
           <div
             key={variant.id}
-            onClick={() => onSelect(variant)}
+            onClick={() => !disabled && onSelect(variant.id)}
             className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
-              selectedVariant?.id === variant.id
+              selectedVariant === variant.id
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-200 hover:border-gray-300'
-            }`}
+            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <img
               src={variant.image}
@@ -41,8 +39,6 @@ export default function VariantSelector({
               className="w-full h-32 object-cover rounded mb-2"
             />
             <p className="font-semibold text-sm">{variant.name}</p>
-            <p className="text-xs text-gray-600 mb-1">{variant.color}</p>
-            <p className="text-sm font-bold text-green-600">₹{variant.price.toLocaleString()}</p>
           </div>
         ))}
       </div>

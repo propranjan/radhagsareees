@@ -6,12 +6,16 @@ interface BeforeAfterSliderProps {
   beforeImage: string;
   afterImage: string;
   title?: string;
+  beforeLabel?: string;
+  afterLabel?: string;
 }
 
 export default function BeforeAfterSlider({
   beforeImage,
   afterImage,
   title = 'Try-On Result',
+  beforeLabel = 'Before',
+  afterLabel = 'After',
 }: BeforeAfterSliderProps) {
   const [sliderPosition, setSliderPosition] = useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -67,10 +71,10 @@ export default function BeforeAfterSlider({
 
         {/* Labels */}
         <div className="absolute top-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-sm font-semibold">
-          Before
+          {beforeLabel}
         </div>
         <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-sm font-semibold">
-          After
+          {afterLabel}
         </div>
       </div>
     </div>

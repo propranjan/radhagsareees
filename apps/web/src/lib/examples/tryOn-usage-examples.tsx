@@ -51,7 +51,6 @@ export function SareeProductPage({ params }: { params: { sku: string } }) {
         {/* Details */}
         {/* <ProductDetails product={product} /> */}
       </div>
-      </div>
 
       {/* Try-On Section */}
       <div className="mb-12">
@@ -71,8 +70,6 @@ export function SareeProductPage({ params }: { params: { sku: string } }) {
       {/* Reviews & Related */}
       {/* <Reviews productId={product.sku} /> */}
       {/* <RelatedProducts category="sarees" /> */}
-    </div>
-  );
     </div>
   );
 }
@@ -109,8 +106,6 @@ export function CheckoutFlow() {
 
       {/* Checkout */}
       {/* <PaymentForm /> */}
-    </div>
-  );
     </div>
   );
 }
