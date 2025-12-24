@@ -370,6 +370,7 @@ export class AITryOnService {
     apiConfig: {
       endpoint: string;
       model: 'viton-hd' | 'tryon-diffusion' | 'clothflow' | 'custom';
+      version?: string;
       apiKey?: string;
     }
   ): Promise<Buffer> {
@@ -384,7 +385,7 @@ export class AITryOnService {
         const sareeImageUrl = `data:image/png;base64,${sareeImageBuffer.toString('base64')}`;
         const maskImageUrl = `data:image/png;base64,${sareeMaskBuffer.toString('base64')}`;
 
-        const payload = {
+        const payload: any = {
           input: {
             human_img: userImageUrl,
             clothing_img: sareeImageUrl,
@@ -392,7 +393,12 @@ export class AITryOnService {
           },
         };
 
-        console.log('Calling Replicate API with VITON-HD model...');
+        // Add version if provided (required by Replicate API)
+        if (apiConfig.version) {
+          payload.version = apiConfig.version;
+        }
+
+        console.log('Calling Replicate API with VITON-HD model...', { version: apiConfig.version });
         
         const response = await fetch(apiConfig.endpoint, {
           method: 'POST',
@@ -614,6 +620,7 @@ export class TryOnService {
       preprocessConfig?: PreprocessConfig;
       modelEndpoint: string;
       modelType: 'viton-hd' | 'tryon-diffusion' | 'clothflow';
+      modelVersion?: string;
       modelApiKey?: string;
     }
   ): Promise<TryOnResult> {
@@ -653,6 +660,7 @@ export class TryOnService {
         {
           endpoint: options.modelEndpoint,
           model: options.modelType,
+          version: options.modelVersion,
           apiKey: options.modelApiKey,
         }
       );
