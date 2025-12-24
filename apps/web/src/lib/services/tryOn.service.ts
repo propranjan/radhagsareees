@@ -376,28 +376,41 @@ export class AITryOnService {
     try {
       // Example: Replicate API integration
       if (apiConfig.model === 'viton-hd') {
-        const formData = new FormData();
-        const userImgArray = Buffer.isBuffer(userImageBuffer) ? new Uint8Array(userImageBuffer) : new Uint8Array(userImageBuffer as any);
-        const sareeImgArray = Buffer.isBuffer(sareeImageBuffer) ? new Uint8Array(sareeImageBuffer) : new Uint8Array(sareeImageBuffer as any);
-        const sareeMaskArray = Buffer.isBuffer(sareeMaskBuffer) ? new Uint8Array(sareeMaskBuffer) : new Uint8Array(sareeMaskBuffer as any);
+        // For Replicate API, we need to send image URLs, not buffers
+        // Since we have buffers here, we'll use data URLs for testing
+        // In production, upload to Cloudinary first and use those URLs
         
-        formData.append('human_img', new Blob([userImgArray], { type: 'image/png' }));
-        formData.append('clothing_img', new Blob([sareeImgArray], { type: 'image/png' }));
-        formData.append('mask_img', new Blob([sareeMaskArray], { type: 'image/png' }));
+        const userImageUrl = `data:image/png;base64,${userImageBuffer.toString('base64')}`;
+        const sareeImageUrl = `data:image/png;base64,${sareeImageBuffer.toString('base64')}`;
+        const maskImageUrl = `data:image/png;base64,${sareeMaskBuffer.toString('base64')}`;
 
+        const payload = {
+          input: {
+            human_img: userImageUrl,
+            clothing_img: sareeImageUrl,
+            mask_img: maskImageUrl,
+          },
+        };
+
+        console.log('Calling Replicate API with VITON-HD model...');
+        
         const response = await fetch(apiConfig.endpoint, {
           method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             ...(apiConfig.apiKey && { Authorization: `Token ${apiConfig.apiKey}` }),
           },
-          body: formData,
+          body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
-          throw new Error(`API error: ${response.statusText}`);
+          const errorData = await response.json().catch(() => ({ message: response.statusText }));
+          console.error('Replicate API error response:', errorData);
+          throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.detail || errorData.message || ''}`);
         }
 
         const resultData = await response.json();
+        console.log('Replicate API response:', { id: resultData.id, status: resultData.status });
 
         // Poll for completion if async
         if (resultData.id && !resultData.output) {
@@ -410,7 +423,12 @@ export class AITryOnService {
           return Buffer.from(await imageResponse.arrayBuffer());
         }
 
-        return Buffer.from(resultData.output);
+        if (Array.isArray(resultData.output) && resultData.output[0]?.startsWith('http')) {
+          const imageResponse = await fetch(resultData.output[0]);
+          return Buffer.from(await imageResponse.arrayBuffer());
+        }
+
+        throw new Error('Invalid response format from try-on API');
       }
 
       throw new Error(`Model ${apiConfig.model} not yet implemented`);
