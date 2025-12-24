@@ -6,6 +6,7 @@ if (!process.env.VERCEL && !process.env.CI) {
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
+import FeatureFlagAppWrapper from '../components/feature-flags/FeatureFlagAppWrapper';
 
 // Optimized font loading with display swap for better LCP
 const inter = Inter({
@@ -72,7 +73,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </head>
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
-        {children}
+        <FeatureFlagAppWrapper>
+          {children}
+        </FeatureFlagAppWrapper>
       </body>
     </html>
   );
