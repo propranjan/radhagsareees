@@ -76,9 +76,18 @@ export async function GET(
     
     const totalReviews = ratings.length;
 
+    // Extract product SKU from first variant SKU (e.g., 'ban-001-blu' -> 'BAN-001')
+    const firstVariantSku = product.variants[0]?.sku || '';
+    const productSku = firstVariantSku
+      .split('-')
+      .slice(0, 2) // Take first two parts (e.g., 'ban', '001')
+      .join('-')
+      .toUpperCase();
+
     // Transform the response
     const responseData = {
       id: product.id,
+      sku: productSku, // Derived product SKU for try-on
       title: product.title,
       slug: product.slug,
       description: product.description,

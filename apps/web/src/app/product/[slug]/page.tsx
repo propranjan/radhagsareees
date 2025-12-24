@@ -55,6 +55,7 @@ interface Variant {
 
 interface Product {
   id: string;
+  sku: string; // Base product SKU
   title: string;
   slug: string;
   description: string;
@@ -628,7 +629,7 @@ export default function ProductPage({ params }: ProductPageProps) {
             <div className="p-6">
               <AISareeTryOn
                 product={{
-                  sku: selectedVariant.sku,
+                  sku: product!.sku, // Use base product SKU
                   name: product.title,
                   price: selectedVariant.price,
                   image: product.images[0],
@@ -636,6 +637,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   variants: [
                     {
                       id: selectedVariant.id,
+                      sku: selectedVariant.sku, // Variant SKU for Cloudinary paths
                       name: `${selectedVariant.color} - ${selectedVariant.size}`,
                       image: product.images[0],
                     }

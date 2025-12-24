@@ -23,6 +23,7 @@ interface SareeProduct {
   category?: string; // Product category slug for Cloudinary paths
   variants?: Array<{
     id: string;
+    sku?: string; // Variant SKU code (e.g., 'ban-001-blu') for Cloudinary paths
     name: string;
     image: string;
   }>;
@@ -40,7 +41,10 @@ export function AISareeTryOn({
   onSuccess,
 }: AISareeTryOnProps) {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [selectedVariant, setSelectedVariant] = useState(product.variants?.[0]?.id || 'default');
+  // Use variant SKU for Cloudinary paths, fallback to 'default' if not available
+  const [selectedVariant, setSelectedVariant] = useState(
+    product.variants?.[0]?.sku || product.variants?.[0]?.id || 'default'
+  );
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [showCameraCapture, setShowCameraCapture] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
