@@ -632,6 +632,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   name: product.title,
                   price: selectedVariant.price,
                   image: product.images[0],
+                  category: product.category.slug,
                   variants: [
                     {
                       id: selectedVariant.id,

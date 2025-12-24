@@ -53,35 +53,65 @@ export const CLOUDINARY_FOLDERS = {
 /**
  * Cloudinary paths utility
  * Generates organized URLs for saree assets by SKU
+ * 
+ * Actual Cloudinary structure:
+ * radhag-sarees/categories/[category]/products/[sku]/variants/[sku-variant]/
+ *   ├── images/
+ *   │   ├── front
+ *   │   ├── back
+ *   │   └── closeup
+ *   └── overlay/
+ *       └── overlay
  */
 export class CloudinaryPaths {
   /**
    * Get paths for a specific saree by SKU and variant from media library
+   * Note: Category must be determined from product data or derived from SKU prefix
    */
-  static getSareePaths(sku: string, variant: string = 'default') {
-    // Images are stored directly in radhag-sarees folder with SKU as filename
-    const mediaLibraryFolder = CLOUDINARY_FOLDERS.SAREE_IMAGES;
-    const maskPath = `${CLOUDINARY_FOLDERS.SAREE_MASKS}/${sku}/${variant}`;
-    const overlayPath = `${CLOUDINARY_FOLDERS.SAREE_OVERLAYS}/${sku}/${variant}`;
+  static getSareePaths(sku: string, variant: string = 'default', category: string = 'banarasi') {
+    // Extract variant from SKU if not provided separately
+    // SKU format: [category-prefix]-[number]-[color] (e.g., BAN-001-BLU)
+    const variantCode = variant === 'default' ? sku.toLowerCase() : variant.toLowerCase();
+    
+    // Build paths based on actual Cloudinary structure
+    const imagePath = `radhag-sarees/categories/${category}/products/${sku}/variants/${variantCode}/images`;
+    const overlayPath = `radhag-sarees/categories/${category}/products/${sku}/variants/${variantCode}/overlay`;
 
     return {
+      // Front image (primary product image)
       image: {
-        folder: mediaLibraryFolder,
-        filename: sku, // Filename is just the SKU
+        folder: imagePath,
+        filename: 'front',
         url: (cloudName: string) => 
-          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${mediaLibraryFolder}/${sku}.jpg`,
+          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${imagePath}/front`,
       },
-      mask: {
-        folder: maskPath,
-        filename: `mask-${sku}-${variant}`,
+      // Back image
+      imageBack: {
+        folder: imagePath,
+        filename: 'back',
         url: (cloudName: string) => 
-          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${maskPath}/mask-${sku}-${variant}.png`,
+          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${imagePath}/back`,
       },
+      // Close-up image
+      imageCloseup: {
+        folder: imagePath,
+        filename: 'closeup',
+        url: (cloudName: string) => 
+          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${imagePath}/closeup`,
+      },
+      // Overlay mask for try-on
       overlay: {
         folder: overlayPath,
-        filename: `overlay-${sku}-${variant}`,
+        filename: 'overlay',
         url: (cloudName: string) => 
-          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${overlayPath}/overlay-${sku}-${variant}.png`,
+          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${overlayPath}/overlay`,
+      },
+      // Legacy mask path (for backward compatibility)
+      mask: {
+        folder: overlayPath,
+        filename: 'mask',
+        url: (cloudName: string) => 
+          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${overlayPath}/mask`,
       },
     };
   }

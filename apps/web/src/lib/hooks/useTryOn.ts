@@ -35,7 +35,7 @@ export function useTryOn(options: UseTryOnOptions = {}) {
    * Generate try-on for selected saree
    */
   const generateTryOn = useCallback(
-    async (userImageUrl: string, sku: string, variant?: string) => {
+    async (userImageUrl: string, sku: string, variant?: string, category?: string) => {
       try {
         setState(prev => ({
           ...prev,
@@ -59,6 +59,7 @@ export function useTryOn(options: UseTryOnOptions = {}) {
             userImageUrl,
             sku,
             variant: variant || 'default',
+            category: category || 'banarasi', // Default to banarasi if not provided
           }),
           signal: abortControllerRef.current.signal,
         });

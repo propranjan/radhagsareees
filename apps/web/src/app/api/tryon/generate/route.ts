@@ -7,6 +7,7 @@
  *   userImageUrl: string        // Cloudinary URL of user image
  *   sku: string                 // Saree product SKU
  *   variant?: string            // Saree variant (default: 'default')
+ *   category?: string           // Product category (default: 'banarasi')
  *   userId?: string             // User ID for tracking
  * }
  * 
@@ -39,7 +40,7 @@ const PROCESSING_TIMEOUT = 180000; // 3 minutes
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userImageUrl, sku, variant = 'default', userId } = body;
+    const { userImageUrl, sku, variant = 'default', category = 'banarasi', userId } = body;
 
     // Validate required fields
     if (!userImageUrl || !sku) {
@@ -50,13 +51,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Log request
-    console.log(`Try-on request: SKU=${sku}, variant=${variant}, userId=${userId}`);
+    console.log(`Try-on request: SKU=${sku}, variant=${variant}, category=${category}, userId=${userId}`);
 
     // Create processing session
     const sessionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     // Validate saree assets exist (warn if missing, but don't block)
-    console.log(`Validating saree assets for SKU: ${sku}, variant: ${variant}`);
+    console.log(`Validating saree assets for SKU: ${sku}, variant: ${variant}, category: ${category}`);
     const assetsValid = await SareeAssetManager.validateSareeAssets(sku, variant);
     
     if (!assetsValid.allPresent) {
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     // Process with timeout
     const result = await Promise.race([
-      processUserImage(userImageUrl, sku, variant, sessionId, userId),
+      processUserImage(userImageUrl, sku, variant, category, sessionId, userId),
       timeoutPromise,
     ]);
 
@@ -118,6 +119,7 @@ async function processUserImage(
   userImageUrl: string,
   sku: string,
   variant: string,
+  category: string,
   sessionId: string,
   userId?: string
 ) {
@@ -130,7 +132,7 @@ async function processUserImage(
   const uploader = new CloudinaryUploadManager();
   const { CloudinaryPaths } = require('@/lib/services/cloudinary.service');
   
-  const sareePaths = CloudinaryPaths.getSareePaths(sku, variant);
+  const sareePaths = CloudinaryPaths.getSareePaths(sku, variant, category);
   const sareeImageBuffer = await downloadImage(sareePaths.image.url(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!));
   const sareeMaskBuffer = await downloadImage(sareePaths.mask.url(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!));
 

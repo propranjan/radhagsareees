@@ -20,6 +20,7 @@ interface SareeProduct {
   name: string;
   price: number;
   image: string;
+  category?: string; // Product category slug for Cloudinary paths
   variants?: Array<{
     id: string;
     name: string;
@@ -98,7 +99,7 @@ export function AISareeTryOn({
       if (result) {
         console.log('Upload successful, URL:', result.url);
         // Ready to generate try-on
-        await generateTryOn(result.url, product.sku, selectedVariant);
+        await generateTryOn(result.url, product.sku, selectedVariant, product.category);
       } else {
         console.error('Upload returned null');
         setUploadError('Failed to upload image');
@@ -149,7 +150,7 @@ export function AISareeTryOn({
       return;
     }
 
-    await generateTryOn(uploadedImage, product.sku, selectedVariant);
+    await generateTryOn(uploadedImage, product.sku, selectedVariant, product.category);
   };
 
   /**
@@ -159,7 +160,7 @@ export function AISareeTryOn({
     setSelectedVariant(variantId);
     // Regenerate try-on with new variant
     if (uploadedImage) {
-      generateTryOn(uploadedImage, product.sku, variantId);
+      generateTryOn(uploadedImage, product.sku, variantId, product.category);
     }
   };
 
