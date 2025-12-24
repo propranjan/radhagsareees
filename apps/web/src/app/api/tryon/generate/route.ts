@@ -137,6 +137,15 @@ async function processUserImage(
   const sareeMaskBuffer = await downloadImage(sareePaths.mask.url(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!));
 
   // Step 3: Call TryOn service
+  const modelApiKey = process.env.REPLICATE_API_TOKEN;
+  
+  if (!modelApiKey || modelApiKey.includes('placeholder')) {
+    throw new Error(
+      'Try-on API key not configured. Please set REPLICATE_API_TOKEN in environment variables. ' +
+      'Get a free API token from https://replicate.com/account/api-tokens'
+    );
+  }
+
   const tryOnResult = await TryOnService.generateTryOn(userImageBuffer, {
     imageUrl: sareePaths.image.url(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!),
     maskUrl: sareePaths.mask.url(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!),
@@ -146,7 +155,7 @@ async function processUserImage(
   }, {
     modelEndpoint: process.env.TRYON_MODEL_ENDPOINT || 'https://api.replicate.com/v1/predictions',
     modelType: (process.env.TRYON_MODEL_TYPE || 'viton-hd') as any,
-    modelApiKey: process.env.REPLICATE_API_TOKEN,
+    modelApiKey: modelApiKey,
   });
 
   // Step 4: Upload output to Cloudinary (placeholder - use actual buffer)
