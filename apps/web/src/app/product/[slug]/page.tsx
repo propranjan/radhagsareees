@@ -627,20 +627,22 @@ export default function ProductPage({ params }: ProductPageProps) {
             </div>
             <div className="p-6">
               <AISareeTryOn
-                productSku={selectedVariant.sku}
-                productName={product.title}
-                productPrice={selectedVariant.price}
-                productImage={product.images[0]}
-                variants={[
-                  {
-                    id: selectedVariant.id,
-                    name: `${selectedVariant.color} - ${selectedVariant.size}`,
-                    image: product.images[0],
-                  }
-                ]}
+                product={{
+                  sku: selectedVariant.sku,
+                  name: product.title,
+                  price: selectedVariant.price,
+                  image: product.images[0],
+                  variants: [
+                    {
+                      id: selectedVariant.id,
+                      name: `${selectedVariant.color} - ${selectedVariant.size}`,
+                      image: product.images[0],
+                    }
+                  ]
+                }}
                 userId={userToken}
                 onSuccess={() => {
-                  analytics.track("ai_tryon_complete", {
+                  analytics.track("tryon_to_cart", {
                     product_id: product.id,
                     product_name: product.title,
                     variant_id: selectedVariant.id,
