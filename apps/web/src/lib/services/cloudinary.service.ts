@@ -59,17 +59,17 @@ export class CloudinaryPaths {
    * Get paths for a specific saree by SKU and variant from media library
    */
   static getSareePaths(sku: string, variant: string = 'default') {
-    // Try variant-specific image first, then fallback to SKU-only
-    const imagePath = `${CLOUDINARY_FOLDERS.SAREE_IMAGES}/${sku}`;
+    // Images are stored directly in radhag-sarees folder with SKU as filename
+    const mediaLibraryFolder = CLOUDINARY_FOLDERS.SAREE_IMAGES;
     const maskPath = `${CLOUDINARY_FOLDERS.SAREE_MASKS}/${sku}/${variant}`;
     const overlayPath = `${CLOUDINARY_FOLDERS.SAREE_OVERLAYS}/${sku}/${variant}`;
 
     return {
       image: {
-        folder: imagePath,
-        filename: sku, // Use SKU as filename in media library
+        folder: mediaLibraryFolder,
+        filename: sku, // Filename is just the SKU
         url: (cloudName: string) => 
-          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${imagePath}/${sku}.jpg`,
+          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${mediaLibraryFolder}/${sku}.jpg`,
       },
       mask: {
         folder: maskPath,
