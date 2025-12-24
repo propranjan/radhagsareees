@@ -55,21 +55,18 @@ export async function POST(request: NextRequest) {
     // Create processing session
     const sessionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    // Validate saree assets exist
+    // Validate saree assets exist (warn if missing, but don't block)
+    console.log(`Validating saree assets for SKU: ${sku}, variant: ${variant}`);
     const assetsValid = await SareeAssetManager.validateSareeAssets(sku, variant);
+    
     if (!assetsValid.allPresent) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Saree assets not available for SKU: ${sku}`,
-          missing: {
-            image: !assetsValid.hasImage,
-            mask: !assetsValid.hasMask,
-            overlay: !assetsValid.hasOverlay,
-          },
-        },
-        { status: 404 }
-      );
+      console.warn(`Warning: Incomplete saree assets for SKU: ${sku}`, {
+        hasImage: assetsValid.hasImage,
+        hasMask: assetsValid.hasMask,
+        hasOverlay: assetsValid.hasOverlay,
+      });
+      // Continue with processing - try-on can work with partial assets
+      // The AI model can generate results even without perfect mask/overlay
     }
 
     // Set timeout promise
@@ -91,6 +88,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: result,
+      warning: !assetsValid.allPresent ? `Saree assets incomplete for SKU: ${sku}` : undefined,
     });
   } catch (error) {
     console.error('Try-on API error:', error);
