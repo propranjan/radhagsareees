@@ -93,8 +93,12 @@ export function useCamera(options: UseCameraOptions = {}) {
       }
 
       // Set canvas dimensions to match video
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
+      canvas.width = videoRef.current.videoWidth || 1280;
+      canvas.height = videoRef.current.videoHeight || 720;
+
+      if (canvas.width === 0 || canvas.height === 0) {
+        throw new Error('Video not ready - please wait for camera to load');
+      }
 
       // Draw video frame to canvas
       context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
@@ -104,10 +108,11 @@ export function useCamera(options: UseCameraOptions = {}) {
         canvas.toBlob(
           (blob) => {
             if (blob) {
+              console.log('Photo captured successfully:', blob.size, 'bytes');
               options.onCapture?.(blob);
               resolve(blob);
             } else {
-              reject(new Error('Failed to capture photo'));
+              reject(new Error('Failed to capture photo - blob is null'));
             }
           },
           'image/jpeg',
@@ -116,6 +121,7 @@ export function useCamera(options: UseCameraOptions = {}) {
       });
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
+      console.error('Capture photo error:', error);
       setError(error.message);
       options.onError?.(error);
       return null;

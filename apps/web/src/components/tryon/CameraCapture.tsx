@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useCamera } from '@/lib/hooks/useCamera';
-import { Camera, X, Maximize2, RotateCw } from 'lucide-react';
+import { Camera, X, Maximize2, RotateCw, Loader } from 'lucide-react';
 
 interface CameraCaptureProps {
   onPhotoCapture: (blob: Blob) => void;
@@ -27,6 +27,7 @@ export default function CameraCapture({
   });
 
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   React.useEffect(() => {
     startCamera();
@@ -34,9 +35,23 @@ export default function CameraCapture({
   }, [startCamera, stopCamera]);
 
   const handleCapture = async () => {
-    const blob = await capturePhoto();
-    if (blob) {
-      onClose();
+    try {
+      console.log('Starting photo capture...');
+      setIsCapturing(true);
+      const blob = await capturePhoto();
+      console.log('Capture returned blob:', blob);
+      
+      if (blob) {
+        console.log('Photo captured, closing camera modal');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Small delay for state update
+        onClose();
+      } else {
+        console.error('Capture returned null blob');
+        setIsCapturing(false);
+      }
+    } catch (error) {
+      console.error('Capture error:', error);
+      setIsCapturing(false);
     }
   };
 
@@ -122,7 +137,12 @@ export default function CameraCapture({
             <>
               <button
                 onClick={switchCamera}
-                className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-full transition-colors"
+                disabled={isCapturing}
+                className={`p-2 rounded-full transition-colors ${
+                  isCapturing
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-800 hover:bg-gray-700 text-white'
+                }`}
                 title="Switch camera"
               >
                 <RotateCw className="w-5 h-5" />
@@ -130,15 +150,34 @@ export default function CameraCapture({
 
               <button
                 onClick={handleCapture}
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
+                disabled={isCapturing}
+                className={`px-8 py-3 font-semibold rounded-lg transition-colors flex items-center gap-2 ${
+                  isCapturing
+                    ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
               >
-                <Camera className="w-5 h-5" />
-                Capture
+                {isCapturing ? (
+                  <>
+                    <Loader className="w-5 h-5 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Camera className="w-5 h-5" />
+                    Capture
+                  </>
+                )}
               </button>
 
               <button
                 onClick={stopCamera}
-                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
+                disabled={isCapturing}
+                className={`px-6 py-3 font-semibold rounded-lg transition-colors ${
+                  isCapturing
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-red-600 hover:bg-red-700 text-white'
+                }`}
               >
                 Cancel
               </button>

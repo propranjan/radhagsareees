@@ -79,6 +79,8 @@ export function AISareeTryOn({
    */
   const handleCameraCapture = async (blob: Blob) => {
     try {
+      console.log('Camera capture received blob:', blob.size, 'bytes');
+      
       // Validate blob
       if (blob.size > 10 * 1024 * 1024) {
         setUploadError('Image size must be less than 10MB');
@@ -87,19 +89,26 @@ export function AISareeTryOn({
 
       // Create File from Blob
       const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+      console.log('File created:', file.name, file.size, 'bytes');
 
       // Upload to Cloudinary
+      console.log('Uploading to Cloudinary...');
       const result = await uploadImage(file);
 
       if (result) {
+        console.log('Upload successful, URL:', result.url);
         // Ready to generate try-on
         await generateTryOn(result.url, product.sku, selectedVariant);
+      } else {
+        console.error('Upload returned null');
+        setUploadError('Failed to upload image');
       }
 
       // Close camera modal
       setShowCameraCapture(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to process camera photo';
+      console.error('Camera capture error:', message, error);
       setUploadError(message);
     }
   };
