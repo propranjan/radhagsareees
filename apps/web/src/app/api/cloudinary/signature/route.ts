@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cloudinaryService } from '@/lib/services/cloudinary.service';
+import CloudinaryUploadManager from '@/lib/services/cloudinary.service';
 
 /**
  * POST /api/cloudinary/signature
@@ -42,8 +42,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get signature from service
-    const signatureData = cloudinaryService.getUploadSignature(folder);
+    // Create manager instance and get signature
+    const manager = new CloudinaryUploadManager();
+    const signatureData = manager.getUploadSignature(folder);
 
     return NextResponse.json(signatureData, { status: 200 });
   } catch (error) {
