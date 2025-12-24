@@ -138,11 +138,11 @@ async function processUserImage(
 
   // Step 3: Call TryOn service
   const modelApiKey = process.env.REPLICATE_API_TOKEN;
+  const vitonServiceUrl = process.env.VITON_SERVICE_URL || 'http://localhost:5000';
   
-  if (!modelApiKey || modelApiKey.includes('placeholder')) {
-    throw new Error(
-      'Try-on API key not configured. Please set REPLICATE_API_TOKEN in environment variables. ' +
-      'Get a free API token from https://replicate.com/account/api-tokens'
+  if (!vitonServiceUrl || vitonServiceUrl.includes('localhost')) {
+    console.warn(
+      'VITON-HD service is running locally. Make sure to start it with: python viton_service/app.py'
     );
   }
 
@@ -153,9 +153,9 @@ async function processUserImage(
     sku,
     variant,
   }, {
-    modelEndpoint: process.env.TRYON_MODEL_ENDPOINT || 'https://api.replicate.com/v1/predictions',
+    modelEndpoint: `${vitonServiceUrl}/api/tryon`,
     modelType: (process.env.TRYON_MODEL_TYPE || 'viton-hd') as any,
-    modelVersion: process.env.TRYON_MODEL_VERSION || 'c2fdc277',
+    modelVersion: process.env.TRYON_MODEL_VERSION,
     modelApiKey: modelApiKey,
   });
 

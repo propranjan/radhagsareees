@@ -1,0 +1,10 @@
+torch>=1.6.0
+torchvision>=0.7.0
+opencv-python==4.5.4.60
+torchgeometry==0.1.1
+Flask==2.3.0
+Flask-CORS==4.0.0
+Pillow==9.5.0
+numpy==1.21.0
+requests==2.28.0
+python-dotenv==1.0.0

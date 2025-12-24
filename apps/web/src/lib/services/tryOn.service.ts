@@ -361,7 +361,7 @@ export class PoseAlignmentService {
 export class AITryOnService {
   /**
    * Call AI try-on inference API
-   * Supports: Hugging Face Spaces, Replicate, or custom model endpoint
+   * Supports: Local VITON-HD service, Hugging Face Spaces, or Replicate
    */
   static async inferTryOn(
     userImageBuffer: Buffer,
@@ -375,66 +375,44 @@ export class AITryOnService {
     }
   ): Promise<Buffer> {
     try {
-      // Example: Replicate API integration
+      // Use local VITON-HD service
       if (apiConfig.model === 'viton-hd') {
-        // For Replicate API, we need to send image URLs, not buffers
-        // Since we have buffers here, we'll use data URLs for testing
-        // In production, upload to Cloudinary first and use those URLs
+        // Convert buffers to multipart form data
+        const formData = new FormData();
         
-        const userImageUrl = `data:image/png;base64,${userImageBuffer.toString('base64')}`;
-        const sareeImageUrl = `data:image/png;base64,${sareeImageBuffer.toString('base64')}`;
-        const maskImageUrl = `data:image/png;base64,${sareeMaskBuffer.toString('base64')}`;
+        // Create Blobs from buffers (convert to Uint8Array for compatibility)
+        const personBlob = new Blob([new Uint8Array(userImageBuffer)], { type: 'image/png' });
+        const clothingBlob = new Blob([new Uint8Array(sareeImageBuffer)], { type: 'image/png' });
+        const maskBlob = new Blob([new Uint8Array(sareeMaskBuffer)], { type: 'image/png' });
+        
+        formData.append('person_image', personBlob, 'person.png');
+        formData.append('clothing_image', clothingBlob, 'clothing.png');
+        formData.append('person_mask', maskBlob, 'mask.png');
 
-        const payload: any = {
-          input: {
-            human_img: userImageUrl,
-            clothing_img: sareeImageUrl,
-            mask_img: maskImageUrl,
-          },
-        };
-
-        // Add version if provided (required by Replicate API)
-        if (apiConfig.version) {
-          payload.version = apiConfig.version;
-        }
-
-        console.log('Calling Replicate API with VITON-HD model...', { version: apiConfig.version });
+        console.log('Calling local VITON-HD service...');
         
         const response = await fetch(apiConfig.endpoint, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(apiConfig.apiKey && { Authorization: `Token ${apiConfig.apiKey}` }),
-          },
-          body: JSON.stringify(payload),
+          body: formData,
         });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ message: response.statusText }));
-          console.error('Replicate API error response:', errorData);
-          throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.detail || errorData.message || ''}`);
+          console.error('VITON-HD service error response:', errorData);
+          throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.error || errorData.message || ''}`);
         }
 
         const resultData = await response.json();
-        console.log('Replicate API response:', { id: resultData.id, status: resultData.status });
+        console.log('VITON-HD service response:', { success: resultData.success });
 
-        // Poll for completion if async
-        if (resultData.id && !resultData.output) {
-          return await this.pollForResult(resultData.id, apiConfig);
+        // Handle base64 encoded result
+        if (resultData.result_image) {
+          // Extract base64 data from data URL
+          const base64Data = resultData.result_image.split(',')[1];
+          return Buffer.from(base64Data, 'base64');
         }
 
-        // Convert result to buffer
-        if (typeof resultData.output === 'string' && resultData.output.startsWith('http')) {
-          const imageResponse = await fetch(resultData.output);
-          return Buffer.from(await imageResponse.arrayBuffer());
-        }
-
-        if (Array.isArray(resultData.output) && resultData.output[0]?.startsWith('http')) {
-          const imageResponse = await fetch(resultData.output[0]);
-          return Buffer.from(await imageResponse.arrayBuffer());
-        }
-
-        throw new Error('Invalid response format from try-on API');
+        throw new Error('No result image in response');
       }
 
       throw new Error(`Model ${apiConfig.model} not yet implemented`);

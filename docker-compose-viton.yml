@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  viton-hd-service:
+    build:
+      context: .
+      dockerfile: viton_service/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_PORT=5000
+      - VITON_HD_PATH=/app/VITON-HD
+    volumes:
+      # Mount checkpoints directory (download from Google Drive first)
+      - ./viton_service/VITON-HD/checkpoints:/app/VITON-HD/checkpoints:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITON_SERVICE_URL=http://viton-hd-service:5000
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
+    depends_on:
+      - viton-hd-service
+    volumes:
+      - ./apps/web:/app
+
+networks:
+  default:
+    name: radhagsareees-network
