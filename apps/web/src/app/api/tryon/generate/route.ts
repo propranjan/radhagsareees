@@ -158,9 +158,14 @@ async function processUserImage(
     modelApiKey: modelApiKey,
   });
 
-  // Step 4: Upload output to Cloudinary (placeholder - use actual buffer)
+  // Step 4: Upload output to Cloudinary
+  const outputBuffer = tryOnResult.metadata?.outputBuffer as Buffer;
+  if (!outputBuffer) {
+    throw new Error('No output buffer returned from try-on service');
+  }
+  
   const outputUpload = await uploader.uploadTryOnOutput(
-    sareeImageBuffer, // In production: use actual tryOnResult buffer
+    outputBuffer,
     userId || 'anonymous',
     sku,
     sessionId

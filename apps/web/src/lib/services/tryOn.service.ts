@@ -681,6 +681,7 @@ export class TryOnService {
           sareeAssets,
           preprocessedUserSize: preprocessedUser.length,
           outputSize: finalOutput.length,
+          outputBuffer: finalOutput, // Store the actual output buffer for upload
         },
       };
     } catch (error) {
