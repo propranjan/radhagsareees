@@ -589,6 +589,22 @@ export class PostprocessingService {
  */
 export class TryOnService {
   /**
+   * Fetch image from Cloudinary URL and return as buffer
+   */
+  private static async fetchCloudinaryImage(imageUrl: string): Promise<Buffer> {
+    try {
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
+      }
+      return Buffer.from(await response.arrayBuffer());
+    } catch (error) {
+      console.error(`Error fetching image from ${imageUrl}:`, error);
+      throw new Error(`Failed to download image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Execute complete try-on pipeline
    */
   static async generateTryOn(
@@ -619,15 +635,12 @@ export class TryOnService {
 
       // Step 3: Load saree assets and align with pose
       console.log('Aligning saree with detected pose...');
-      // In production, fetch saree assets from Cloudinary URLs
-      // const sareeImageBuffer = await fetchCloudinaryImage(sareeAssets.imageUrl);
-      // const sareeMaskBuffer = await fetchCloudinaryImage(sareeAssets.maskUrl);
-
-      const mockSareeBuffer = Buffer.alloc(1000); // Placeholder
-      const mockMaskBuffer = Buffer.alloc(1000); // Placeholder
+      // Fetch saree assets from Cloudinary URLs
+      const sareeImageBuffer = await this.fetchCloudinaryImage(sareeAssets.imageUrl);
+      const sareeMaskBuffer = await this.fetchCloudinaryImage(sareeAssets.maskUrl);
 
       const { transformedBuffer: alignedSaree } = PoseAlignmentService.applyPoseTransform(
-        mockSareeBuffer,
+        sareeImageBuffer,
         pose
       );
 
@@ -636,7 +649,7 @@ export class TryOnService {
       const tryOnOutput = await AITryOnService.inferTryOn(
         preprocessedUser,
         alignedSaree,
-        mockMaskBuffer,
+        sareeMaskBuffer,
         {
           endpoint: options.modelEndpoint,
           model: options.modelType,
