@@ -4,7 +4,6 @@
  */
 
 import sharp from 'sharp';
-import { getLocalSareeImageUrl } from './local-images.service';
 
 /**
  * Image preprocessing configuration

@@ -12,7 +12,8 @@ import { useImageUpload } from '@/lib/hooks/useImageUpload';
 import BeforeAfterSlider from './tryon/BeforeAfterSlider';
 import VariantSelector from './tryon/VariantSelector';
 import ShareButton from './tryon/ShareButton';
-import { Loader, AlertCircle, Check, Upload } from 'lucide-react';
+import CameraCapture from './tryon/CameraCapture';
+import { Loader, AlertCircle, Check, Upload, Camera } from 'lucide-react';
 
 interface SareeProduct {
   sku: string;
@@ -40,6 +41,7 @@ export function AISareeTryOn({
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState(product.variants?.[0]?.id || 'default');
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [showCameraCapture, setShowCameraCapture] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Hooks
@@ -71,6 +73,36 @@ export function AISareeTryOn({
       onSuccess?.(result);
     },
   });
+
+  /**
+   * Handle camera capture
+   */
+  const handleCameraCapture = async (blob: Blob) => {
+    try {
+      // Validate blob
+      if (blob.size > 10 * 1024 * 1024) {
+        setUploadError('Image size must be less than 10MB');
+        return;
+      }
+
+      // Create File from Blob
+      const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+
+      // Upload to Cloudinary
+      const result = await uploadImage(file);
+
+      if (result) {
+        // Ready to generate try-on
+        await generateTryOn(result.url, product.sku, selectedVariant);
+      }
+
+      // Close camera modal
+      setShowCameraCapture(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to process camera photo';
+      setUploadError(message);
+    }
+  };
 
   /**
    * Handle image selection and upload
@@ -144,56 +176,76 @@ export function AISareeTryOn({
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold mb-4">Upload Your Photo</h2>
 
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className={`
-                border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-                transition-colors duration-200
-                ${uploadingImage ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-blue-500'}
-              `}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
-                disabled={uploadingImage}
-                className="hidden"
-              />
+            <div className="space-y-3 mb-4">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className={`
+                  border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
+                  transition-colors duration-200
+                  ${uploadingImage ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-blue-500'}
+                `}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  disabled={uploadingImage}
+                  className="hidden"
+                />
 
-              {uploadedImage && !uploadingImage ? (
-                <>
-                  <Check className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                  <p className="text-green-600 font-medium">Image uploaded</p>
-                </>
-              ) : uploadingImage ? (
-                <>
-                  <Loader className="w-8 h-8 text-blue-500 mx-auto mb-2 animate-spin" />
-                  <p className="text-blue-600 font-medium mb-2">Uploading...</p>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-500 h-2 rounded-full transition-all"
-                      style={{ width: `${uploadProgress.percentage}%` }}
-                    />
-                  </div>
-                  <p className="text-sm text-gray-500 mt-2">{uploadProgress.percentage}%</p>
-                  <button
-                    onClick={cancelUpload}
-                    className="text-red-500 text-sm mt-2 hover:underline"
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-700 font-medium">Click to upload</p>
-                  <p className="text-sm text-gray-500">or drag and drop</p>
-                  <p className="text-xs text-gray-400 mt-2">
-                    PNG, JPG, GIF up to 10MB
-                  </p>
-                </>
-              )}
+                {uploadedImage && !uploadingImage ? (
+                  <>
+                    <Check className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                    <p className="text-green-600 font-medium">Image uploaded</p>
+                  </>
+                ) : uploadingImage ? (
+                  <>
+                    <Loader className="w-8 h-8 text-blue-500 mx-auto mb-2 animate-spin" />
+                    <p className="text-blue-600 font-medium mb-2">Uploading...</p>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-500 h-2 rounded-full transition-all"
+                        style={{ width: `${uploadProgress.percentage}%` }}
+                      />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2">{uploadProgress.percentage}%</p>
+                    <button
+                      onClick={cancelUpload}
+                      className="text-red-500 text-sm mt-2 hover:underline"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-700 font-medium">Click to upload</p>
+                    <p className="text-sm text-gray-500">or drag and drop</p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      PNG, JPG, GIF up to 10MB
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* Camera Capture Button */}
+              <button
+                onClick={() => setShowCameraCapture(true)}
+                disabled={uploadingImage}
+                className={`
+                  w-full py-3 px-4 rounded-lg font-semibold flex items-center justify-center gap-2
+                  transition-all duration-200
+                  ${
+                    uploadingImage
+                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      : 'bg-purple-600 hover:bg-purple-700 text-white active:scale-95'
+                  }
+                `}
+              >
+                <Camera className="w-5 h-5" />
+                Take a Photo
+              </button>
             </div>
 
             {uploadedImage && (
@@ -359,6 +411,14 @@ export function AISareeTryOn({
           )}
         </div>
       </div>
+
+      {/* Camera Capture Modal */}
+      {showCameraCapture && (
+        <CameraCapture
+          onPhotoCapture={handleCameraCapture}
+          onClose={() => setShowCameraCapture(false)}
+        />
+      )}
     </div>
   );
 }
