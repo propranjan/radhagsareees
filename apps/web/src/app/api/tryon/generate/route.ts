@@ -155,7 +155,7 @@ async function processUserImage(
   }, {
     modelEndpoint: process.env.TRYON_MODEL_ENDPOINT || 'https://api.replicate.com/v1/predictions',
     modelType: (process.env.TRYON_MODEL_TYPE || 'viton-hd') as any,
-    modelVersion: process.env.TRYON_MODEL_VERSION || 'fec87b89',
+    modelVersion: process.env.TRYON_MODEL_VERSION || 'c2fdc277',
     modelApiKey: modelApiKey,
   });
 
