@@ -5,15 +5,23 @@ services:
     build:
       context: .
       dockerfile: viton_service/Dockerfile
+    image: radhagsareees-viton-hd-service:latest
+    container_name: viton-hd-service
     ports:
       - "5000:5000"
     environment:
       - FLASK_ENV=production
       - FLASK_PORT=5000
       - VITON_HD_PATH=/app/VITON-HD
+      - DEVICE=cuda
+      - PYTHONUNBUFFERED=1
     volumes:
       # Mount checkpoints directory (download from Google Drive first)
       - ./viton_service/VITON-HD/checkpoints:/app/VITON-HD/checkpoints:ro
+      # Mount datasets directory
+      - ./viton_service/VITON-HD/datasets:/app/VITON-HD/datasets:ro
+      # Mount results directory for debugging
+      - ./viton_service/results:/app/results
     deploy:
       resources:
         reservations:
@@ -21,22 +29,41 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - viton-network
 
   web:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
+    image: radhagsareees-web:latest
+    container_name: radhagsareees-web
     ports:
       - "3000:3000"
     environment:
       - VITON_SERVICE_URL=http://viton-hd-service:5000
       - DATABASE_URL=${DATABASE_URL}
       - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
     depends_on:
-      - viton-hd-service
-    volumes:
-      - ./apps/web:/app
+      viton-hd-service:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - viton-network
 
 networks:
-  default:
-    name: radhagsareees-network
+  viton-network:
+    driver: bridge
