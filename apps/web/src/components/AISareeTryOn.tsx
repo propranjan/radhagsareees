@@ -307,11 +307,56 @@ export function AISareeTryOn({
         <div className="lg:col-span-2">
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-red-900">Error</h3>
-                <p className="text-red-700 text-sm">{error}</p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="flex gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-red-900">Error</h3>
+                  <p className="text-red-700 text-sm mt-1">{error}</p>
+                  
+                  {/* Troubleshooting tips */}
+                  <details className="mt-3 text-sm">
+                    <summary className="cursor-pointer font-medium text-red-800 hover:text-red-900">
+                      Troubleshooting
+                    </summary>
+                    <ul className="mt-2 ml-4 list-disc space-y-1 text-red-700">
+                      {error.includes('Cloudinary') && (
+                        <>
+                          <li>Cloudinary credentials are not configured</li>
+                          <li>Contact support to enable image uploads</li>
+                        </>
+                      )}
+                      {error.includes('signature') && (
+                        <>
+                          <li>Unable to generate upload signature</li>
+                          <li>Check your internet connection</li>
+                          <li>Try refreshing the page</li>
+                        </>
+                      )}
+                      {error.includes('network') && (
+                        <>
+                          <li>Network connection error</li>
+                          <li>Check your internet connection</li>
+                          <li>Try uploading again</li>
+                        </>
+                      )}
+                      {error.includes('size') && (
+                        <>
+                          <li>Image file is too large</li>
+                          <li>Maximum size: 10MB</li>
+                          <li>Try compressing your image</li>
+                        </>
+                      )}
+                      {!error.includes('Cloudinary') && !error.includes('signature') && !error.includes('network') && !error.includes('size') && (
+                        <>
+                          <li>Try refreshing the page</li>
+                          <li>Clear browser cache</li>
+                          <li>Check console (F12) for detailed errors</li>
+                        </>
+                      )}
+                    </ul>
+                  </details>
+                </div>
               </div>
             </div>
           )}

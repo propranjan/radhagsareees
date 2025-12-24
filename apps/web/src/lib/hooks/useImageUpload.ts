@@ -48,10 +48,19 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
         });
 
         if (!signatureResponse.ok) {
-          throw new Error('Failed to get upload signature');
+          const errorData = await signatureResponse.json().catch(() => ({}));
+          const errorMsg = errorData.error || `Failed to get upload signature (${signatureResponse.status})`;
+          console.error('Signature API error:', errorMsg, errorData);
+          throw new Error(errorMsg);
         }
 
-        const { signature, timestamp, apiKey, cloudName } = await signatureResponse.json();
+        const signatureData = await signatureResponse.json();
+        const { signature, timestamp, apiKey, cloudName } = signatureData;
+
+        if (!signature || !timestamp || !apiKey || !cloudName) {
+          console.error('Missing signature data:', { signature: !!signature, timestamp: !!timestamp, apiKey: !!apiKey, cloudName: !!cloudName });
+          throw new Error('Invalid signature response from server');
+        }
 
         // Prepare FormData
         const formData = new FormData();
@@ -62,6 +71,8 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
         formData.append('folder', 'saree-tryon/user-images');
         formData.append('tags', 'user-upload');
         formData.append('resource_type', 'auto');
+
+        console.log('Uploading to Cloudinary:', { cloudName, folder: 'saree-tryon/user-images', fileSize: file.size });
 
         // Upload with progress tracking
         return await new Promise((resolve, reject) => {
@@ -84,12 +95,32 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
           // Success
           xhr.addEventListener('load', () => {
             if (xhr.status === 200) {
-              const response = JSON.parse(xhr.responseText);
-              setUploading(false);
-              options.onSuccess?.(response.secure_url, response.public_id);
-              resolve({ url: response.secure_url, publicId: response.public_id });
+              try {
+                const response = JSON.parse(xhr.responseText);
+                if (!response.secure_url || !response.public_id) {
+                  throw new Error('Invalid response format from Cloudinary');
+                }
+                setUploading(false);
+                options.onSuccess?.(response.secure_url, response.public_id);
+                resolve({ url: response.secure_url, publicId: response.public_id });
+              } catch (parseError) {
+                const msg = parseError instanceof Error ? parseError.message : 'Failed to parse upload response';
+                console.error('Parse error:', msg, xhr.responseText);
+                setError(msg);
+                setUploading(false);
+                reject(new Error(msg));
+              }
             } else {
-              const errorMsg = `Upload failed with status ${xhr.status}`;
+              // Try to get Cloudinary error message
+              let errorMsg = `Upload failed with status ${xhr.status}`;
+              try {
+                const errorData = JSON.parse(xhr.responseText);
+                errorMsg = errorData.error?.message || errorMsg;
+              } catch (e) {
+                // Fallback to status text
+                errorMsg = xhr.statusText || errorMsg;
+              }
+              console.error('Upload error response:', errorMsg, xhr.responseText);
               setError(errorMsg);
               setUploading(false);
               reject(new Error(errorMsg));
@@ -98,7 +129,8 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
 
           // Error
           xhr.addEventListener('error', () => {
-            const errorMsg = 'Upload error occurred';
+            const errorMsg = `Upload network error: ${xhr.statusText || 'Connection failed'}`;
+            console.error('XHR error event:', errorMsg);
             setError(errorMsg);
             setUploading(false);
             options.onError?.(new Error(errorMsg));

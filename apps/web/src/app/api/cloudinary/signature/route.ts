@@ -12,6 +12,25 @@ import { cloudinaryService } from '@/lib/services/cloudinary.service';
  */
 export async function POST(request: NextRequest) {
   try {
+    // Validate Cloudinary credentials are set
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      console.error('Missing Cloudinary configuration:', {
+        cloudName: !!cloudName,
+        apiKey: !!apiKey,
+        apiSecret: !!apiSecret,
+      });
+      return NextResponse.json(
+        { 
+          error: 'Cloudinary not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in environment variables.',
+        },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const { folder = 'saree-tryon/user-images' } = body;
 
@@ -29,8 +48,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(signatureData, { status: 200 });
   } catch (error) {
     console.error('Error generating upload signature:', error);
+    const message = error instanceof Error ? error.message : 'Failed to generate upload signature';
     return NextResponse.json(
-      { error: 'Failed to generate upload signature' },
+      { error: message },
       { status: 500 }
     );
   }
