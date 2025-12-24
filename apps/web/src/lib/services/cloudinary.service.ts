@@ -106,12 +106,12 @@ export class CloudinaryPaths {
         url: (cloudName: string) => 
           `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${overlayPath}/overlay`,
       },
-      // Legacy mask path (for backward compatibility)
+      // Legacy mask path (for backward compatibility - also points to overlay file)
       mask: {
         folder: overlayPath,
-        filename: 'mask',
+        filename: 'overlay', // Use overlay file (renamed from 'mask')
         url: (cloudName: string) => 
-          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${overlayPath}/mask`,
+          `https://res.cloudinary.com/${cloudName}/image/upload/w_800,h_1000,c_fill/${overlayPath}/overlay`,
       },
     };
   }
