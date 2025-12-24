@@ -21,6 +21,12 @@ const TryOnModal = dynamic(
   { ssr: false }
 );
 
+// AI Try-On with camera capture
+const AISareeTryOn = dynamic(
+  () => import("../../../components/AISareeTryOn"),
+  { ssr: false, loading: () => <div className="w-full h-96 bg-gray-100 rounded-lg animate-pulse" /> }
+);
+
 // Initialize Supabase client
 const getSupabaseClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -83,6 +89,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [isTryOnModalOpen, setIsTryOnModalOpen] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [userToken, setUserToken] = useState<string | undefined>(undefined);
+  const [isAICameraModalOpen, setIsAICameraModalOpen] = useState(false);
 
   // Get user session for reviews
   useEffect(() => {
@@ -499,6 +506,18 @@ export default function ProductPage({ params }: ProductPageProps) {
 
             {/* Action Buttons */}
             <div className="space-y-4">
+              {/* AI Camera Try-On Button */}
+              <button
+                onClick={() => setIsAICameraModalOpen(true)}
+                className="w-full px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Try On with Camera
+              </button>
+
               {/* Try On Button - Feature Flag Gated */}
               {selectedVariant?.overlayPng && (
                 <ClientTryOnButton 
@@ -591,6 +610,46 @@ export default function ProductPage({ params }: ProductPageProps) {
           variantInfo={`${selectedVariant.color} - ${selectedVariant.size}`}
           onAddToCart={handleTryOnToCart}
         />
+      )}
+
+      {/* AI Camera Try-On Modal */}
+      {isAICameraModalOpen && selectedVariant && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Virtual Try-On</h2>
+              <button
+                onClick={() => setIsAICameraModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <AISareeTryOn
+                productSku={selectedVariant.sku}
+                productName={product.title}
+                productPrice={selectedVariant.price}
+                productImage={product.images[0]}
+                variants={[
+                  {
+                    id: selectedVariant.id,
+                    name: `${selectedVariant.color} - ${selectedVariant.size}`,
+                    image: product.images[0],
+                  }
+                ]}
+                userId={userToken}
+                onSuccess={() => {
+                  analytics.track("ai_tryon_complete", {
+                    product_id: product.id,
+                    product_name: product.title,
+                    variant_id: selectedVariant.id,
+                  });
+                }}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
